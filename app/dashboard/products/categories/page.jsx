@@ -57,7 +57,7 @@ export default function CategoriesList() {
     if (!categoryToDelete) return;
 
     try {
-      await api.delete(`/categories/${categoryToDelete.id}/`);
+      await api.delete(`/categories/${categoryToDelete.id}`);
       fetchCategories();
       onClose();
     } catch (error) {

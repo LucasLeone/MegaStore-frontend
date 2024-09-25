@@ -75,7 +75,7 @@ export default function SubcategoriesList() {
     if (!subcategoryToDelete) return;
 
     try {
-      await api.delete(`/subcategories/${subcategoryToDelete.id}/`);
+      await api.delete(`/subcategories/${subcategoryToDelete.id}`);
       fetchSubcategories();
       onClose();
     } catch (error) {

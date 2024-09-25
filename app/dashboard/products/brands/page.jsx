@@ -57,7 +57,7 @@ export default function BrandsList() {
     if (!brandToDelete) return;
 
     try {
-      await api.delete(`/brands/${brandToDelete.id}/`);
+      await api.delete(`/brands/${brandToDelete.id}`);
       fetchBrands();
       onClose();
     } catch (error) {

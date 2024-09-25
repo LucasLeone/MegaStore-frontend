@@ -131,7 +131,7 @@ export default function ProductsList() {
     if (!productToDelete) return;
 
     try {
-      await api.delete(`/products/${productToDelete.id}/`);
+      await api.delete(`/products/${productToDelete.id}`);
       fetchProducts();
       onClose();
     } catch (error) {
