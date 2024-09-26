@@ -29,7 +29,7 @@ import {
   IconTrash
 } from "@tabler/icons-react";
 import { useState, useMemo, useCallback } from "react";
-import useBrands from '@/app/hooks/useBrands'; // Hook que obtiene las marcas
+import useBrands from '@/app/hooks/useBrands';
 import { useRouter } from "next/navigation";
 import api from '@/app/axios';
 
@@ -107,7 +107,7 @@ export default function BrandsList() {
           className="rounded-md"
           isIconOnly
           color="warning"
-          onPress={() => router.push(`/dashboard/brands/edit/${brand.id}`)}
+          onPress={() => router.push(`/dashboard/products/brands/edit/${brand.id}`)}
           aria-label={`Editar marca ${brand.name}`}
         >
           <IconEdit className="h-5" />
@@ -179,7 +179,7 @@ export default function BrandsList() {
             </Link>
           </Tooltip>
           <Tooltip content="Agregar nueva marca">
-            <Link href="/dashboard/brands/create">
+            <Link href="/dashboard/products/brands/create">
               <Button className="rounded-md bg-black text-white">
                 <IconPlus className="h-4 mr-1" />
                 Nueva Marca
