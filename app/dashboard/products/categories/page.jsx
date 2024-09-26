@@ -68,6 +68,7 @@ export default function CategoriesList() {
   const columns = [
     { key: 'id', label: '#', sortable: true },
     { key: 'name', label: 'Nombre', sortable: true },
+    { key: 'description', label: 'Descripción', sortable: false },
     { key: 'actions', label: 'Acciones', sortable: false },
   ];
 
@@ -129,6 +130,7 @@ export default function CategoriesList() {
     currentItems.map(category => ({
       id: category.id,
       name: category.name,
+      description: category.description,
       actions: renderActions(category),
     }))
   ), [currentItems, renderActions]);

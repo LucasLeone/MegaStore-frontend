@@ -1,4 +1,3 @@
-// components/SubcategoriesList.js
 "use client";
 
 import {
@@ -87,10 +86,10 @@ export default function SubcategoriesList() {
     { key: 'id', label: '#', sortable: true },
     { key: 'name', label: 'Nombre', sortable: true },
     { key: 'categoryName', label: 'Categoría', sortable: true },
+    { key: 'description', label: 'Descripción', sortable: false },
     { key: 'actions', label: 'Acciones', sortable: false },
   ];
 
-  // Crear un mapa de categoryId a categoryName para acceso rápido
   const categoryMap = useMemo(() => {
     const map = {};
     (categories || []).forEach(cat => {
@@ -118,7 +117,6 @@ export default function SubcategoriesList() {
   }, [subcategories, filterCategory, searchQuery, categoryMap]);
 
   const sortedSubcategories = useMemo(() => {
-    // Aquí podrías agregar lógica de ordenamiento en el futuro
     return filteredSubcategories;
   }, [filteredSubcategories]);
 
@@ -143,7 +141,7 @@ export default function SubcategoriesList() {
           className="rounded-md"
           isIconOnly
           color="warning"
-          onPress={() => router.push(`/dashboard/subcategories/edit/${subcategory.id}`)}
+          onPress={() => router.push(`/dashboard/products/subcategories/edit/${subcategory.id}`)}
           aria-label={`Editar subcategoría ${subcategory.name}`}
         >
           <IconEdit className="h-5" />
@@ -169,6 +167,7 @@ export default function SubcategoriesList() {
       id: subcategory.id,
       name: subcategory.name,
       categoryName: categoryMap[subcategory.categoryId] || "Sin categoría",
+      description: subcategory.description,
       actions: renderActions(subcategory),
     }))
   ), [currentItems, categoryMap, renderActions]);
@@ -215,7 +214,7 @@ export default function SubcategoriesList() {
             </Link>
           </Tooltip>
           <Tooltip content="Agregar nueva subcategoría">
-            <Link href="/dashboard/subcategories/create">
+            <Link href="/dashboard/products/subcategories/create">
               <Button className="rounded-md bg-black text-white">
                 <IconPlus className="h-4 mr-1" />
                 Nueva SubCategoría
