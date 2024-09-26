@@ -104,7 +104,7 @@ export default function CategoriesList() {
           className="rounded-md"
           isIconOnly
           color="warning"
-          onPress={() => router.push(`/dashboard/categories/edit/${category.id}`)}
+          onPress={() => router.push(`/dashboard/products/categories/edit/${category.id}`)}
           aria-label={`Editar categoría ${category.name}`}
         >
           <IconEdit className="h-5" />
@@ -174,7 +174,7 @@ export default function CategoriesList() {
             </Link>
           </Tooltip>
           <Tooltip content="Agregar nueva categoría">
-            <Link href="/dashboard/categories/create">
+            <Link href="/dashboard/products/categories/create">
               <Button className="rounded-md bg-black text-white">
                 <IconPlus className="h-4 mr-1" />
                 Nueva Categoría
