@@ -109,8 +109,8 @@ export default function EditSubcategoryPage() {
     } catch (error) {
       console.error("Error al actualizar la categoría:", error);
       if (error.response && error.response.data) {
-        const apiErrors = Object.values(error.response.data).flat();
-        setError(apiErrors.join(" "));
+        const apiErrors = Object.values(error.response.data.message);
+        setError(apiErrors);
       } else {
         setError("Error al actualizar la categoría.");
       }

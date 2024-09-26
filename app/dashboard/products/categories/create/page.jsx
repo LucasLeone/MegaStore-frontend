@@ -72,8 +72,8 @@ export default function CreateCategoryPage() {
       console.error("Error al crear la categoría:", error);
       if (error.response && error.response.data) {
         // Mostrar errores específicos de la API
-        const apiErrors = Object.values(error.response.data).flat();
-        setError(apiErrors.join(" "));
+        const apiErrors = Object.values(error.response.data.message);
+        setError(apiErrors);
       } else {
         setError("Error al crear la categoría.");
       }

@@ -79,8 +79,8 @@ export default function CreateSubcategoryPage() {
     } catch (error) {
       console.error("Error al crear la subcategoría:", error);
       if (error.response && error.response.data) {
-        const apiErrors = Object.values(error.response.data).flat();
-        setError(apiErrors.join(" "));
+        const apiErrors = Object.values(error.response.data.message);
+        setError(apiErrors);
       } else {
         setError("Error al crear la categoría.");
       }

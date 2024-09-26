@@ -98,8 +98,8 @@ export default function EditCategoryPage() {
       console.error("Error al actualizar la categoría:", error);
       if (error.response && error.response.data) {
         // Mostrar errores específicos de la API
-        const apiErrors = Object.values(error.response.data).flat();
-        setError(apiErrors.join(" "));
+        const apiErrors = Object.values(error.response.data.message);
+        setError(apiErrors);
       } else {
         setError("Error al actualizar la categoría.");
       }
