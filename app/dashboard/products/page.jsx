@@ -32,11 +32,14 @@ import {
   IconFilter,
   IconEdit,
   IconTrash,
+  IconChevronDown
 } from "@tabler/icons-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import useProducts from '@/app/hooks/useProducts';
+import useVariants from '@/app/hooks/useVariants';
 import { useRouter } from "next/navigation";
 import api from '@/app/axios';
+import VariantsTable from "@/app/components/VariantsTable";
 
 export default function ProductsList() {
   const { products, loading, error, fetchProducts } = useProducts();
@@ -51,8 +54,17 @@ export default function ProductsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [productToDelete, setProductToDelete] = useState(null);
 
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedProductName, setSelectedProductName] = useState("");
+  const { variants, loading: variantsLoading, error: variantsError } = useVariants(selectedProductId);
+
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const [isVariantsModalOpen, setIsVariantsModalOpen] = useState(false);
+
+  const { isOpen: isVariantDeleteOpen, onOpen: onVariantDeleteOpen, onClose: onVariantDeleteClose } = useDisclosure();
+  const [variantToDelete, setVariantToDelete] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -139,16 +151,41 @@ export default function ProductsList() {
     }
   }, [productToDelete, fetchProducts, onClose]);
 
+  const handleViewClick = useCallback((product) => {
+    setSelectedProductId(product.id);
+    setSelectedProductName(product.name);
+    setIsVariantsModalOpen(true);
+  }, []);
+
+  const handleDeleteVariantClick = useCallback((variant) => {
+    setVariantToDelete(variant);
+    onVariantDeleteOpen();
+  }, [onVariantDeleteOpen]);
+
+  const handleDeleteVariant = useCallback(async () => {
+    if (!variantToDelete) return;
+
+    try {
+      await api.delete(`/variants/${variantToDelete.id}`);
+      variants.splice(variants.findIndex(v => v.id === variantToDelete.id), 1);
+      onVariantDeleteClose();
+    } catch (error) {
+      console.error("Error al eliminar variante:", error);
+    }
+  }, [variantToDelete, variants, onVariantDeleteClose]);
+
+  const handleEditVariantClick = useCallback((variant) => {
+    router.push(`/dashboard/variants/edit/${variant.id}`);
+  }, [router]);
+
   const columns = [
     { key: 'id', label: '#', sortable: true },
     { key: 'name', label: 'Nombre', sortable: true },
     { key: 'description', label: 'Descripción', sortable: false },
     { key: 'price', label: 'Precio', sortable: true },
-    { key: 'stock', label: 'Stock', sortable: true },
     { key: 'category', label: 'Categoría', sortable: true },
     { key: 'subcategory', label: 'SubCategoría', sortable: true },
     { key: 'brand', label: 'Marca', sortable: true },
-    { key: 'status', label: 'Estado', sortable: true },
     { key: 'actions', label: 'Acciones', sortable: false },
   ];
 
@@ -213,6 +250,18 @@ export default function ProductsList() {
 
   const renderActions = useCallback((product) => (
     <div className="flex gap-1">
+      <Tooltip content="Variantes">
+        <Button
+          variant="light"
+          className="rounded-md"
+          isIconOnly
+          color="primary"
+          onPress={() => handleViewClick(product)}
+          aria-label={`Ver variantes de ${product.name}`}
+        >
+          <IconChevronDown className="h-5" />
+        </Button>
+      </Tooltip>
       <Tooltip content="Editar">
         <Button
           variant="light"
@@ -238,7 +287,7 @@ export default function ProductsList() {
         </Button>
       </Tooltip>
     </div>
-  ), [handleDeleteClick, router]);
+  ), [handleDeleteClick, handleViewClick, router]);
 
   const rows = useMemo(() => (
     currentItems.map(product => ({
@@ -246,11 +295,9 @@ export default function ProductsList() {
       name: product.name,
       description: product.description,
       price: `${parseFloat(product.price).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}`,
-      stock: product.stock,
       category: product.category,
       subcategory: product.subcategory,
       brand: product.brand,
-      status: product.status,
       actions: renderActions(product),
     }))
   ), [currentItems, renderActions]);
@@ -266,6 +313,7 @@ export default function ProductsList() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-[92vw]">
 
+      {/* Sección de Título y Botones */}
       <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center mb-6">
         <p className="text-2xl font-bold mb-4 md:mb-0">Productos</p>
         <div className="flex flex-wrap gap-2">
@@ -307,6 +355,7 @@ export default function ProductsList() {
         </div>
       </div>
 
+      {/* Sección de Filtros y Búsqueda */}
       <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center space-y-4 md:space-y-0 space-x-0 md:space-x-4 mb-6">
         <Input
           placeholder="Buscar productos"
@@ -324,6 +373,7 @@ export default function ProductsList() {
           isClearable={true}
         />
         <div className="flex space-x-4">
+          {/* Filtro de Categoría */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -351,6 +401,7 @@ export default function ProductsList() {
             </DropdownMenu>
           </Dropdown>
 
+          {/* Filtro de SubCategoría */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -378,6 +429,7 @@ export default function ProductsList() {
             </DropdownMenu>
           </Dropdown>
 
+          {/* Filtro de Marca */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -407,6 +459,7 @@ export default function ProductsList() {
         </div>
       </div>
 
+      {/* Tabla de Productos */}
       <div className="overflow-x-auto border rounded-md">
         {loading ? (
           <div className="flex justify-center items-center p-6">
@@ -454,6 +507,7 @@ export default function ProductsList() {
         )}
       </div>
 
+      {/* Paginación */}
       {!loading && !error && currentItems.length !== 0 && (
         <div className='flex flex-col sm:flex-row items-center justify-between mt-4'>
           <p className="text-sm text-muted-foreground mb-2 sm:mb-0">
@@ -471,6 +525,7 @@ export default function ProductsList() {
         </div>
       )}
 
+      {/* Modal para Confirmar Eliminación de Producto */}
       <Modal isOpen={isOpen} onOpenChange={onClose} aria-labelledby="modal-title" placement="top-center">
         <ModalContent>
           {() => (
@@ -503,6 +558,84 @@ export default function ProductsList() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* Modal para Confirmar Eliminación de Variante */}
+      <Modal isOpen={isVariantDeleteOpen} onOpenChange={onVariantDeleteClose} aria-labelledby="modal-title" placement="top-center">
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Confirmar Eliminación de Variante</ModalHeader>
+              <ModalBody>
+                <p>
+                  ¿Estás seguro de que deseas eliminar la variante de color <strong>{variantToDelete?.color}</strong> y talle <strong>{variantToDelete?.size}</strong>?
+                  Esta acción no se puede deshacer.
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={onVariantDeleteClose}
+                  disabled={false}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  color="primary"
+                  onPress={handleDeleteVariant}
+                  disabled={false}
+                >
+                  Eliminar
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Modal para Mostrar Variantes */}
+      <Modal
+        isOpen={isVariantsModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedProductId(null);
+            setSelectedProductName("");
+          }
+          setIsVariantsModalOpen(open);
+        }}
+        aria-labelledby="variants-modal-title"
+        placement="center"
+        size="2xl"
+      >
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader className="flex gap-1">
+                Variantes de <strong>{selectedProductName}</strong>
+              </ModalHeader>
+              <ModalBody>
+                <VariantsTable
+                  variants={variants}
+                  loading={variantsLoading}
+                  error={variantsError}
+                  productName={selectedProductName}
+                  onDeleteVariant={handleDeleteVariantClick}
+                  onEditVariant={handleEditVariantClick}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="primary"
+                  onPress={() => setIsVariantsModalOpen(false)}
+                >
+                  Cerrar
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
     </div>
   );
 }
