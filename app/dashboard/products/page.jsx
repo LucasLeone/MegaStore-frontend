@@ -317,12 +317,6 @@ export default function ProductsList() {
       <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center mb-6">
         <p className="text-2xl font-bold mb-4 md:mb-0">Productos</p>
         <div className="flex flex-wrap gap-2">
-          <Tooltip content="Exportar productos">
-            <Button variant="bordered" className="rounded-md border-1.5">
-              <IconDownload className="h-4 mr-1" />
-              Exportar
-            </Button>
-          </Tooltip>
           <Tooltip content="Listar Categorías">
             <Link href="/dashboard/products/categories">
               <Button className="rounded-md bg-black text-white">
