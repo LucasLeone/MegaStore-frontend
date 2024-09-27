@@ -175,8 +175,8 @@ export default function ProductsList() {
   }, [variantToDelete, variants, onVariantDeleteClose]);
 
   const handleEditVariantClick = useCallback((variant) => {
-    router.push(`/dashboard/variants/edit/${variant.id}`);
-  }, [router]);
+    router.push(`/dashboard/products/variants/${selectedProductId}/edit/${variant.id}`);
+  }, [router, selectedProductId]);
 
   const columns = [
     { key: 'id', label: '#', sortable: true },
@@ -610,8 +610,20 @@ export default function ProductsList() {
         <ModalContent>
           {() => (
             <>
-              <ModalHeader className="flex gap-1">
-                Variantes de <strong>{selectedProductName}</strong>
+              <ModalHeader className="flex justify-between content-center">
+                <div className="">
+                  Variantes de <strong>{selectedProductName}</strong>
+                </div>
+                <div className="me-4">
+                  <Tooltip content="Agregar una nueva variante">
+                    <Link href={`/dashboard/products/variants/${selectedProductId}/create`}>
+                      <Button className="rounded-md bg-black text-white">
+                        <IconPlus className="h-4 mr-1" />
+                        Nueva Variante
+                      </Button>
+                    </Link>
+                  </Tooltip>
+                </div>
               </ModalHeader>
               <ModalBody>
                 <VariantsTable
@@ -623,10 +635,10 @@ export default function ProductsList() {
                   onEditVariant={handleEditVariantClick}
                 />
               </ModalBody>
-              <ModalFooter>
+              <ModalFooter className="me-4">
                 <Button
-                  color="primary"
                   onPress={() => setIsVariantsModalOpen(false)}
+                  className="rounded-md bg-black text-white"
                 >
                   Cerrar
                 </Button>

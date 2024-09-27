@@ -11,7 +11,7 @@ import {
   Tooltip,
   Textarea
 } from "@nextui-org/react";
-import { IconCheck, IconArrowLeft } from "@tabler/icons-react";
+import { IconEdit, IconArrowLeft } from "@tabler/icons-react";
 import { useState, useCallback, useEffect } from "react";
 import api from "@/app/axios";
 import { useRouter, useParams } from "next/navigation";
@@ -265,7 +265,7 @@ export default function UpdateProductPage() {
           isDisabled={loading}
           fullWidth
         >
-          {loading ? <Spinner size="sm" /> : <><IconCheck className="h-4" /> Actualizar Producto</>}
+          {loading ? <Spinner size="sm" /> : <><IconEdit className="h-4" /> Actualizar Producto</>}
         </Button>
       </div>
     </div>

@@ -12,7 +12,7 @@ import {
   Textarea
 } from "@nextui-org/react";
 import { IconPlus, IconArrowLeft } from "@tabler/icons-react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import api from "@/app/axios";
 import { useRouter } from "next/navigation";
 import useCategories from "@/app/hooks/useCategories";
