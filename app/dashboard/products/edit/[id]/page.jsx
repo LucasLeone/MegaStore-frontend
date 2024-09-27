@@ -87,7 +87,13 @@ export default function UpdateProductPage() {
       return;
     }
 
-    if (name.length > 50) {
+    if (name.length < 2) {
+      setError("El nombre del producto debe tener al menos 2 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    if (name.length > 32) {
       setError("El nombre del producto no puede tener más de 50 caracteres.");
       setLoading(false);
       return;
@@ -130,20 +136,6 @@ export default function UpdateProductPage() {
     return (
       <div className="flex justify-center items-center h-screen">
         <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  if (error && !loadingProduct) {
-    return (
-      <div className="container mx-auto px-4 py-6 max-w-[92vw]">
-        <Code color="danger" className="text-wrap">{error}</Code>
-        <Link href="/dashboard/products" className="mt-4 inline-block">
-          <Button variant="light" size="sm" isIconOnly>
-            <IconArrowLeft className="h-4" />
-            Volver
-          </Button>
-        </Link>
       </div>
     );
   }

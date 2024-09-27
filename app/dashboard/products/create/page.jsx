@@ -56,7 +56,13 @@ export default function CreateProductPage() {
       return;
     }
 
-    if (name.length > 50) {
+    if (name.length < 2) {
+      setError("El nombre del producto debe tener al menos 2 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    if (name.length > 32) {
       setError("El nombre del producto no puede tener más de 50 caracteres.");
       setLoading(false);
       return;

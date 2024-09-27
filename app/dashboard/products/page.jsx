@@ -372,7 +372,7 @@ export default function ProductsList() {
           aria-label="Buscar productos"
           isClearable={true}
         />
-        <div className="flex space-x-4">
+        <div className="flex gap-2 flex-wrap">
           {/* Filtro de Categoría */}
           <Dropdown>
             <DropdownTrigger>
@@ -610,8 +610,8 @@ export default function ProductsList() {
         <ModalContent>
           {() => (
             <>
-              <ModalHeader className="flex justify-between content-center">
-                <div className="">
+              <ModalHeader className="flex justify-between">
+                <div className="content-center">
                   Variantes de <strong>{selectedProductName}</strong>
                 </div>
                 <div className="me-4">
