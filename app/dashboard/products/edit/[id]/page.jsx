@@ -91,10 +91,12 @@ export default function UpdateProductPage() {
       return;
     }
 
-    if (description.length > 128) {
-      setError("La descripción del producto no puede tener más de 128 caracteres.");
-      setLoading(false);
-      return;
+    if (description) {
+      if (description.length > 128) {
+        setError("La descripción del producto no puede tener más de 128 caracteres.");
+        setLoading(false);
+        return;
+      }
     }
 
     const productData = {

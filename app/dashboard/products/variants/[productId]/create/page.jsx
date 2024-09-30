@@ -152,6 +152,9 @@ export default function CreateVariantPage() {
           variant="underlined"
           type="number"
           min="0"
+          step="1"
+          inputMode="numeric"
+          pattern="\d*"
           aria-label="Stock de la Variante"
           isRequired
         />

@@ -69,10 +69,12 @@ export default function CreateProductPage() {
       return;
     }
 
-    if (description.length > 128) {
-      setError("La descripción del producto no puede tener más de 128 caracteres.");
-      setLoading(false);
-      return;
+    if (description) {
+      if (description.length > 128) {
+        setError("La descripción del producto no puede tener más de 128 caracteres.");
+        setLoading(false);
+        return;
+      }
     }
 
     const productData = {
@@ -141,6 +143,8 @@ export default function CreateProductPage() {
           variant="underlined"
           type="number"
           step="0.01"
+          inputMode="decimal"
+          pattern="\d+(\.\d{1,2})?"
           min="0"
           aria-label="Precio"
           startContent={
