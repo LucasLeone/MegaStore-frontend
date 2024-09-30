@@ -2,31 +2,66 @@
 
 import "@/styles/globals.css";
 import { Sidebar, SidebarBody, SidebarLink } from "@/app/components/Sidebar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   IconHome,
   IconPackage,
   IconArrowLeft,
   IconChartBar,
+  IconUser
 } from "@tabler/icons-react";
 import { Link } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
+  const [user, setUser] = useState(null);
+
+  const handleLogout = () => {
+    Cookies.remove("access_token");
+    Cookies.remove("user");
+    router.push("/auth/login");
+  };
 
   const menuItems = [
     { label: "Inicio", path: "/dashboard", icon: <IconHome /> },
-    { label: "Estadísticas", path: "/dashboard/statitics", icon: <IconChartBar /> },
+    // { label: "Estadísticas", path: "/dashboard/statitics", icon: <IconChartBar /> },
     { label: "Productos", path: "/dashboard/products", icon: <IconPackage /> },
-    { 
+    {
       label: "Cerrar sesión",
       icon: <IconArrowLeft />,
-      className: "text-red-500 hover:text-red-700"
+      className: "text-red-500 hover:text-red-700",
+      onClick: handleLogout,
     }
   ];
+
+  useEffect(() => {
+    const token = Cookies.get("access_token");
+    const userCookie = Cookies.get("user");
+
+    if (!token || !userCookie) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (token && userCookie) {
+      const parsedUser = JSON.parse(userCookie);
+      setUser(parsedUser);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (user) {
+      const hasAdminRole = user.roles && user.roles.some(role => role.name === "ADMIN");
+      if (!hasAdminRole) {
+        router.push("/");
+      }
+    }
+  }, [user, router]);
+
 
   return (
     <div className="flex md:min-h-screen flex-wrap md:flex-nowrap">
@@ -44,6 +79,17 @@ export default function DashboardLayout({ children }) {
                 />
               ))}
             </div>
+          </div>
+          <div>
+            {user && (
+              <SidebarLink
+                link={{
+                  label: `${user.first_name} ${user.last_name}`,
+                  path: "/dashboard/profile",
+                  icon: <IconUser />,
+                }}
+              />
+            )}
           </div>
         </SidebarBody>
       </Sidebar>
