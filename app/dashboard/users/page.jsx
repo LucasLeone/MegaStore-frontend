@@ -31,6 +31,8 @@ import {
   IconTrash,
   IconPlus,
   IconFilter,
+  IconHome,
+  IconPhone, // Asegúrate de importar el icono de teléfono
 } from "@tabler/icons-react";
 import { useState, useMemo, useCallback } from "react";
 import useUsers from "@/app/hooks/useUsers";
@@ -43,12 +45,9 @@ export default function UsersList() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [userToDelete, setUserToDelete] = useState(null);
-
   const [filterRole, setFilterRole] = useState(null);
-
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
-
   const rowsPerPage = 10;
 
   const handleSearchChange = useCallback((e) => {
@@ -92,6 +91,8 @@ export default function UsersList() {
     { key: "firstName", label: "Nombre" },
     { key: "lastName", label: "Apellido" },
     { key: "email", label: "Email" },
+    { key: "phoneNumber", label: "Teléfono" }, // Nueva columna para Teléfono
+    { key: "address", label: "Dirección" },    // Nueva columna para Dirección
     { key: "roles", label: "Rol" },
     { key: "actions", label: "Acciones" },
   ];
@@ -107,10 +108,18 @@ export default function UsersList() {
           return role.name;
         }
       });
+      // Formatear la dirección
+      const address = user.address
+        ? `${user.address.street} ${user.address.number}${
+            user.address.floor ? `, Piso ${user.address.floor}` : ""
+          }${user.address.apartment ? `, Depto ${user.address.apartment}` : ""}, ${user.address.city}, ${user.address.postal_code}, ${user.address.country}`
+        : "N/A";
       return {
         ...user,
         firstName: user.first_name,
         lastName: user.last_name,
+        phoneNumber: user.phone_number,    // Mapeo del número de teléfono
+        address: address,                  // Mapeo de la dirección formateada
         roles: roleNames.join(", "),
         roleList: roleNames,
       };
@@ -131,7 +140,9 @@ export default function UsersList() {
           (user.firstName && user.firstName.toLowerCase().includes(query)) ||
           (user.lastName && user.lastName.toLowerCase().includes(query)) ||
           (user.email && user.email.toLowerCase().includes(query)) ||
-          (user.roles && user.roles.toLowerCase().includes(query))
+          (user.roles && user.roles.toLowerCase().includes(query)) ||
+          (user.phoneNumber && user.phoneNumber.toLowerCase().includes(query)) ||
+          (user.address && user.address.toLowerCase().includes(query))
       );
     }
 
@@ -190,6 +201,8 @@ export default function UsersList() {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        phoneNumber: user.phoneNumber, // Nueva fila para Teléfono
+        address: user.address,         // Nueva fila para Dirección
         roles: user.roles,
         actions: renderActions(user),
       })),
