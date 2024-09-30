@@ -20,19 +20,18 @@ import useUser from "@/app/hooks/useUser";
 
 export default function EditUserPage() {
   const [loading, setLoading] = useState(false);
-  // const [fetchingUser, setFetchingUser] = useState(true);
   const [error, setError] = useState(null);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  // const [email, setEmail] = useState("");
-  // const [selectedRoles, setSelectedRoles] = useState([]);
+  const [email, setEmail] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState([]);
 
   const router = useRouter();
   const params = useParams();
   const { id } = params;
 
-  // const rolesAvailable = ["USER", "ADMIN"];
+  const rolesAvailable = ["USER", "ADMIN"];
 
   const { user, loading: fetchingUser, error: fetchError } = useUser(id);
 
@@ -40,8 +39,8 @@ export default function EditUserPage() {
     if (user) {
       setFirstName(user.first_name);
       setLastName(user.last_name);
-      // setEmail(user.email);
-      // setSelectedRoles(user.roles.map((role) => role.name));
+      setEmail(user.email);
+      setSelectedRoles(user.roles.map((role) => role.name));
     }
   }, [user]);
 
@@ -55,24 +54,24 @@ export default function EditUserPage() {
       return;
     }
 
-    // if (selectedRoles.length === 0) {
-    //   setError("Por favor, selecciona al menos un rol.");
-    //   setLoading(false);
-    //   return;
-    // }
+    if (selectedRoles.length === 0) {
+      setError("Por favor, selecciona al menos un rol.");
+      setLoading(false);
+      return;
+    }
 
-    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    // if (!emailRegex.test(email)) {
-    //   setError("Por favor, ingresa un correo electrónico válido.");
-    //   setLoading(false);
-    //   return;
-    // }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Por favor, ingresa un correo electrónico válido.");
+      setLoading(false);
+      return;
+    }
 
     const userData = {
-      // email,
+      email,
       first_name: firstName,
       last_name: lastName,
-      // roles: selectedRoles,
+      roles: selectedRoles,
     };
 
     const token = Cookies.get("access_token");
@@ -95,7 +94,7 @@ export default function EditUserPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, firstName, lastName, router]);
+  }, [firstName, lastName, selectedRoles, email, id, router]);
 
   if (fetchingUser) {
     return (
@@ -144,7 +143,7 @@ export default function EditUserPage() {
           aria-label="Apellido"
           isRequired
         />
-        {/* <Input
+        <Input
           label="Email"
           placeholder="Ingrese el correo electrónico"
           value={email}
@@ -171,7 +170,7 @@ export default function EditUserPage() {
               {role === "USER" ? "Usuario" : role === "ADMIN" ? "Admin" : role}
             </SelectItem>
           ))}
-        </Select> */}
+        </Select>
       </div>
 
       <div className="mt-6">
