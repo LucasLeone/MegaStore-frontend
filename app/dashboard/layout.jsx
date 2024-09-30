@@ -8,7 +8,8 @@ import {
   IconPackage,
   IconArrowLeft,
   IconChartBar,
-  IconUser
+  IconUser,
+  IconUsersGroup
 } from "@tabler/icons-react";
 import { Link } from "@nextui-org/react";
 import { motion } from "framer-motion";
@@ -30,6 +31,7 @@ export default function DashboardLayout({ children }) {
     { label: "Inicio", path: "/dashboard", icon: <IconHome /> },
     // { label: "Estadísticas", path: "/dashboard/statitics", icon: <IconChartBar /> },
     { label: "Productos", path: "/dashboard/products", icon: <IconPackage /> },
+    { label: "Usuarios", path: "/dashboard/users", icon: <IconUsersGroup /> },
     {
       label: "Cerrar sesión",
       icon: <IconArrowLeft />,
