@@ -32,9 +32,9 @@ export default function UpdateProductPage() {
   const [subcategory, setSubcategory] = useState(null);
   const [brand, setBrand] = useState(null);
 
-  const { categories } = useCategories();
-  const { subcategories } = useSubcategories();
-  const { brands } = useBrands();
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
+  const { subcategories, loading: subcategoriesLoading, error: subcategoriesError } = useSubcategories(category);
+  const { brands, loading: brandsLoading, error: brandsError } = useBrands();
 
   const router = useRouter();
   const params = useParams();
@@ -45,7 +45,7 @@ export default function UpdateProductPage() {
   useEffect(() => {
     if (product) {
       setName(product.name);
-      setDescription(product.description);
+      setDescription(product.description || "");
       setPrice(product.price.toString());
       setCategory(product.categoryId);
       setSubcategory(product.subcategoryId);
@@ -58,6 +58,10 @@ export default function UpdateProductPage() {
       setError(errorProduct);
     }
   }, [errorProduct]);
+
+  useEffect(() => {
+    setSubcategory(null);
+  }, [category]);
 
   const isValidPrice = (price) => {
     return /^\d+(\.\d{1,2})?$/.test(price) && parseFloat(price) > 0;
@@ -85,18 +89,16 @@ export default function UpdateProductPage() {
       return;
     }
 
-    if (name.length > 50) {
-      setError("El nombre del producto no puede tener más de 50 caracteres.");
+    if (name.length > 32) {
+      setError("El nombre del producto no puede tener más de 32 caracteres.");
       setLoading(false);
       return;
     }
 
-    if (description) {
-      if (description.length > 128) {
-        setError("La descripción del producto no puede tener más de 128 caracteres.");
-        setLoading(false);
-        return;
-      }
+    if (description && description.length > 128) {
+      setError("La descripción del producto no puede tener más de 128 caracteres.");
+      setLoading(false);
+      return;
     }
 
     const productData = {
@@ -120,8 +122,10 @@ export default function UpdateProductPage() {
     } catch (err) {
       console.error("Error al actualizar producto:", err);
       if (err.response && err.response.data) {
-        const apiErrors = Object.values(err.response.data.message);
-        setError(apiErrors.join(", "));
+        const apiErrors = Array.isArray(err.response.data.message)
+          ? err.response.data.message.join(", ")
+          : err.response.data.message;
+        setError(apiErrors);
       } else {
         setError("Error al actualizar el producto.");
       }
@@ -130,10 +134,20 @@ export default function UpdateProductPage() {
     }
   }, [name, price, category, subcategory, brand, description, router, productId]);
 
-  if (loadingProduct) {
+  if (loadingProduct || categoriesLoading || subcategoriesLoading || brandsLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (categoriesError || subcategoriesError || brandsError) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-[92vw]">
+        <Code color="danger" className="text-wrap">
+          {categoriesError || subcategoriesError || brandsError}
+        </Code>
       </div>
     );
   }
@@ -172,6 +186,8 @@ export default function UpdateProductPage() {
           variant="underlined"
           type="number"
           step="0.01"
+          inputMode="decimal"
+          pattern="\d+(\.\d{1,2})?"
           min="0"
           aria-label="Precio"
           startContent={
@@ -189,6 +205,7 @@ export default function UpdateProductPage() {
           fullWidth
           variant="underlined"
           aria-label="Descripción del Producto"
+          maxLength={128}
         />
         <div className="flex flex-col md:flex-row md:gap-4">
           <div className="flex-1 space-y-2">
@@ -196,11 +213,12 @@ export default function UpdateProductPage() {
               aria-label="Categoría del Producto"
               label="Categoría"
               placeholder="Seleccione una categoría"
-              value={category}
               onSelectionChange={(value) => setCategory(value)}
-              selectedKey={category ? category.toString() : ""}
               variant="underlined"
+              selectedKey={category ? category.toString() : ""}
               isRequired
+              value={category}
+              isClearable
             >
               {categories.map((cat) => (
                 <AutocompleteItem key={cat.id} value={cat.id}>
@@ -209,16 +227,19 @@ export default function UpdateProductPage() {
               ))}
             </Autocomplete>
           </div>
+
           <div className="flex-1 space-y-2">
             <Autocomplete
               aria-label="Subcategoría del Producto"
               label="Subcategoría"
-              placeholder="Seleccione una Subcategoría"
-              value={subcategory}
+              placeholder={category ? "Seleccione una Subcategoría" : "Seleccione una categoría primero"}
               onSelectionChange={(value) => setSubcategory(value)}
-              selectedKey={subcategory ? subcategory.toString() : ""}
               variant="underlined"
+              selectedKey={subcategory ? subcategory.toString() : ""}
               isRequired
+              isDisabled={!category}
+              value={subcategory}
+              isClearable
             >
               {subcategories.map((subcat) => (
                 <AutocompleteItem key={subcat.id} value={subcat.id}>
@@ -227,16 +248,18 @@ export default function UpdateProductPage() {
               ))}
             </Autocomplete>
           </div>
+
           <div className="flex-1 space-y-2">
             <Autocomplete
               aria-label="Marca del Producto"
               label="Marca"
               placeholder="Seleccione una marca"
-              value={brand}
               onSelectionChange={(value) => setBrand(value)}
-              selectedKey={brand ? brand.toString() : ""}
               variant="underlined"
+              selectedKey={brand ? brand.toString() : ""}
               isRequired
+              value={brand}
+              isClearable
             >
               {brands.map((br) => (
                 <AutocompleteItem key={br.id} value={br.id}>

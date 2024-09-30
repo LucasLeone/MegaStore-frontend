@@ -12,7 +12,7 @@ import {
   Textarea
 } from "@nextui-org/react";
 import { IconPlus, IconArrowLeft } from "@tabler/icons-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import api from "@/app/axios";
 import { useRouter } from "next/navigation";
 import useCategories from "@/app/hooks/useCategories";
@@ -31,9 +31,11 @@ export default function CreateProductPage() {
   const [subcategory, setSubcategory] = useState(null);
   const [brand, setBrand] = useState(null);
 
-  const { categories } = useCategories();
-  const { subcategories } = useSubcategories();
-  const { brands } = useBrands();
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
+
+  const { subcategories, loading: subcategoriesLoading, error: subcategoriesError } = useSubcategories(category);
+
+  const { brands, loading: brandsLoading, error: brandsError } = useBrands();
 
   const router = useRouter();
 
@@ -64,17 +66,15 @@ export default function CreateProductPage() {
     }
 
     if (name.length > 32) {
-      setError("El nombre del producto no puede tener más de 50 caracteres.");
+      setError("El nombre del producto no puede tener más de 32 caracteres.");
       setLoading(false);
       return;
     }
 
-    if (description) {
-      if (description.length > 128) {
-        setError("La descripción del producto no puede tener más de 128 caracteres.");
-        setLoading(false);
-        return;
-      }
+    if (description && description.length > 128) {
+      setError("La descripción del producto no puede tener más de 128 caracteres.");
+      setLoading(false);
+      return;
     }
 
     const productData = {
@@ -99,7 +99,9 @@ export default function CreateProductPage() {
     } catch (error) {
       console.error("Error al crear producto:", error);
       if (error.response && error.response.data) {
-        const apiErrors = Object.values(error.response.data.message);
+        const apiErrors = Array.isArray(error.response.data.message)
+          ? error.response.data.message.join(", ")
+          : error.response.data.message;
         setError(apiErrors);
       } else {
         setError("Error al crear el producto.");
@@ -108,6 +110,10 @@ export default function CreateProductPage() {
       setLoading(false);
     }
   }, [name, price, category, subcategory, brand, description, router]);
+
+  useEffect(() => {
+    setSubcategory(null);
+  }, [category]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-[92vw]">
@@ -121,6 +127,7 @@ export default function CreateProductPage() {
         </Link>
         <p className="text-2xl font-bold">Crear nuevo Producto</p>
       </div>
+
       {error && <Code color="danger" className="text-wrap">{error}</Code>}
 
       <div className="space-y-4 mt-4">
@@ -134,6 +141,7 @@ export default function CreateProductPage() {
           aria-label="Nombre del Producto"
           isRequired
         />
+
         <Input
           label="Precio"
           placeholder="Ingrese el precio (Ej: 4500.00)"
@@ -154,6 +162,7 @@ export default function CreateProductPage() {
           }
           isRequired
         />
+
         <Textarea
           label="Descripción"
           placeholder="Ingrese una descripción del producto (máximo 128 caracteres)"
@@ -162,7 +171,9 @@ export default function CreateProductPage() {
           fullWidth
           variant="underlined"
           aria-label="Descripción del Producto"
+          maxLength={128}
         />
+
         <div className="flex flex-col md:flex-row md:gap-4">
           <div className="flex-1 space-y-2">
             <Autocomplete
@@ -172,6 +183,8 @@ export default function CreateProductPage() {
               onSelectionChange={(value) => setCategory(value)}
               variant="underlined"
               isRequired
+              value={category}
+              clearable
             >
               {categories.map((category) => (
                 <AutocompleteItem key={category.id} value={category.id}>
@@ -180,14 +193,18 @@ export default function CreateProductPage() {
               ))}
             </Autocomplete>
           </div>
+
           <div className="flex-1 space-y-2">
             <Autocomplete
               aria-label="Subcategoría del Producto"
               label="Subcategoría"
-              placeholder="Seleccione una Subcategoría"
+              placeholder={category ? "Seleccione una Subcategoría" : "Seleccione una categoría primero"}
               onSelectionChange={(value) => setSubcategory(value)}
               variant="underlined"
               isRequired
+              isDisabled={!category}
+              value={subcategory}
+              clearable
             >
               {subcategories.map((subcategory) => (
                 <AutocompleteItem key={subcategory.id} value={subcategory.id}>
@@ -196,6 +213,7 @@ export default function CreateProductPage() {
               ))}
             </Autocomplete>
           </div>
+
           <div className="flex-1 space-y-2">
             <Autocomplete
               aria-label="Marca del Producto"
@@ -204,6 +222,8 @@ export default function CreateProductPage() {
               onSelectionChange={(value) => setBrand(value)}
               variant="underlined"
               isRequired
+              value={brand}
+              clearable
             >
               {brands.map((brand) => (
                 <AutocompleteItem key={brand.id} value={brand.id}>
