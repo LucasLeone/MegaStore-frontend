@@ -38,6 +38,7 @@ import useSubcategories from '@/app/hooks/useSubcategories';
 import useCategories from '@/app/hooks/useCategories';
 import { useRouter } from "next/navigation";
 import api from '@/app/axios';
+import Cookies from "js-cookie";
 
 export default function SubcategoriesList() {
   const { subcategories, loading, error, fetchSubcategories } = useSubcategories();
@@ -73,8 +74,13 @@ export default function SubcategoriesList() {
   const handleDeleteSubcategory = useCallback(async () => {
     if (!subcategoryToDelete) return;
 
+    const token = Cookies.get('access_token');
     try {
-      await api.delete(`/subcategories/${subcategoryToDelete.id}`);
+      await api.delete(`/subcategories/${subcategoryToDelete.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
       fetchSubcategories();
       onClose();
     } catch (error) {

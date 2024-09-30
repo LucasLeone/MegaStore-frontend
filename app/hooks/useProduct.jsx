@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../axios';
+import Cookies from 'js-cookie';
 
 const useProduct = (productId) => {
   const [product, setProduct] = useState(null);
@@ -10,8 +11,13 @@ const useProduct = (productId) => {
     setLoading(true);
     setError(null);
 
+    const token = Cookies.get('access_token');
     try {
-      const response = await api.get(`/products/${id}`);
+      const response = await api.get(`/products/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
       setProduct(response.data);
     } catch (err) {
       console.error(err);
@@ -25,7 +31,6 @@ const useProduct = (productId) => {
     if (productId) {
       fetchProduct(productId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   return { product, loading, error, fetchProduct };

@@ -16,6 +16,7 @@ import { useState, useCallback } from "react";
 import api from "@/app/axios";
 import { useRouter } from "next/navigation";
 import useCategories from "@/app/hooks/useCategories";
+import Cookies from "js-cookie";
 
 export default function CreateSubcategoryPage() {
   const { categories } = useCategories();
@@ -72,8 +73,15 @@ export default function CreateSubcategoryPage() {
       categoryId: category,
     };
 
+    const token = Cookies.get("access_token");
+
     try {
-      await api.post("/subcategories", subcategoryData);
+      await api.post("/subcategories", subcategoryData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+      );
 
       router.push("/dashboard/products/subcategories");
     } catch (error) {

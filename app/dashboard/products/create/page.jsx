@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import useCategories from "@/app/hooks/useCategories";
 import useSubcategories from "@/app/hooks/useSubcategories";
 import useBrands from "@/app/hooks/useBrands";
+import Cookies from "js-cookie";
 
 export default function CreateProductPage() {
   const [loading, setLoading] = useState(false);
@@ -83,10 +84,14 @@ export default function CreateProductPage() {
       brandId: brand,
     };
 
-    console.log("Product Data:", productData);
+    const token = Cookies.get("access_token");
 
     try {
-      await api.post("/products", productData);
+      await api.post("/products", productData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       router.push("/dashboard/products");
     } catch (error) {

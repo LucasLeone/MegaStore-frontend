@@ -18,10 +18,11 @@ import { useRouter, useParams } from "next/navigation";
 import useCategories from "@/app/hooks/useCategories";
 import useSubcategories from "@/app/hooks/useSubcategories";
 import useBrands from "@/app/hooks/useBrands";
+import Cookies from "js-cookie";
+import useProduct from "@/app/hooks/useProduct";
 
 export default function UpdateProductPage() {
   const [loading, setLoading] = useState(false);
-  const [loadingProduct, setLoadingProduct] = useState(true);
   const [error, setError] = useState(null);
 
   const [name, setName] = useState("");
@@ -39,37 +40,28 @@ export default function UpdateProductPage() {
   const params = useParams();
   const productId = params.id;
 
+  const { product, loading: loadingProduct, error: errorProduct } = useProduct(productId);
+
+  useEffect(() => {
+    if (product) {
+      setName(product.name);
+      setDescription(product.description);
+      setPrice(product.price.toString());
+      setCategory(product.categoryId);
+      setSubcategory(product.subcategoryId);
+      setBrand(product.brandId);
+    }
+  }, [product]);
+
+  useEffect(() => {
+    if (errorProduct) {
+      setError(errorProduct);
+    }
+  }, [errorProduct]);
+
   const isValidPrice = (price) => {
     return /^\d+(\.\d{1,2})?$/.test(price) && parseFloat(price) > 0;
   };
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await api.get(`/products/${productId}`);
-        const product = response.data;
-
-        setName(product.name);
-        setDescription(product.description);
-        setPrice(product.price.toString());
-        setCategory(product.categoryId);
-        setSubcategory(product.subcategoryId);
-        setBrand(product.brandId);
-      } catch (err) {
-        console.error("Error al obtener el producto:", err);
-        setError("No se pudo cargar el producto.");
-      } finally {
-        setLoadingProduct(false);
-      }
-    };
-
-    if (productId) {
-      fetchProduct();
-    } else {
-      setError("ID de producto no proporcionado.");
-      setLoadingProduct(false);
-    }
-  }, [productId]);
 
   const handleUpdateProduct = useCallback(async () => {
     setLoading(true);
@@ -93,7 +85,7 @@ export default function UpdateProductPage() {
       return;
     }
 
-    if (name.length > 32) {
+    if (name.length > 50) {
       setError("El nombre del producto no puede tener más de 50 caracteres.");
       setLoading(false);
       return;
@@ -114,10 +106,14 @@ export default function UpdateProductPage() {
       brandId: brand,
     };
 
-    console.log("Product Data:", productData);
+    const token = Cookies.get("access_token");
 
     try {
-      await api.put(`/products/${productId}`, productData);
+      await api.put(`/products/${productId}`, productData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       router.push("/dashboard/products");
     } catch (err) {
       console.error("Error al actualizar producto:", err);

@@ -32,6 +32,7 @@ import { useState, useMemo, useCallback } from "react";
 import useBrands from '@/app/hooks/useBrands';
 import { useRouter } from "next/navigation";
 import api from '@/app/axios';
+import Cookies from "js-cookie";
 
 export default function BrandsList() {
   const { brands, loading, error, fetchBrands } = useBrands();
@@ -56,8 +57,13 @@ export default function BrandsList() {
   const handleDeleteBrand = useCallback(async () => {
     if (!brandToDelete) return;
 
+    const token = Cookies.get('access_token');
     try {
-      await api.delete(`/brands/${brandToDelete.id}`);
+      await api.delete(`/brands/${brandToDelete.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
       fetchBrands();
       onClose();
     } catch (error) {

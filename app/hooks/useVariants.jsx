@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../axios';
+import Cookies from 'js-cookie';
 
 const useVariants = (productId) => {
   const [variants, setVariants] = useState([]);
@@ -15,9 +16,13 @@ const useVariants = (productId) => {
     setLoading(true);
     setError(null);
 
+    const token = Cookies.get('access_token');
     try {
       const response = await api.get(`/variants`, {
         params: { productId },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
       });
       setVariants(response.data);
     } catch (err) {
@@ -31,7 +36,7 @@ const useVariants = (productId) => {
   useEffect(() => {
     fetchVariants();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]); // Se vuelve a ejecutar cuando cambia el productId
+  }, [productId]);
 
   return { variants, loading, error, fetchVariants };
 };

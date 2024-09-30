@@ -27,7 +27,7 @@ export default function LoginPage() {
     const toggleVisibility = () => setIsVisible(!isVisible);
 
     const handleLogin = async () => {
-        
+
         if (!email || !password) {
             setError("Por favor, completa todos los campos.");
             return;
@@ -38,10 +38,16 @@ export default function LoginPage() {
             return;
         }
 
+        const token = Cookies.get('access_token');
+
         try {
             const response = await api.post('/auth/login', {
                 email,
                 password
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             });
 
             const user = response.data.user;

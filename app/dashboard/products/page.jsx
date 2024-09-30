@@ -34,18 +34,26 @@ import {
   IconTrash,
   IconChevronDown
 } from "@tabler/icons-react";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import useProducts from '@/app/hooks/useProducts';
 import useVariants from '@/app/hooks/useVariants';
+import useBrands from "@/app/hooks/useBrands";
+import useCategories from "@/app/hooks/useCategories";
+import useSubcategories from "@/app/hooks/useSubcategories";
 import { useRouter } from "next/navigation";
 import api from '@/app/axios';
 import VariantsTable from "@/app/components/VariantsTable";
+import Cookies from "js-cookie";
 
 export default function ProductsList() {
-  const { products, loading, error, fetchProducts } = useProducts();
-  const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
-  const [brands, setBrands] = useState([]);
+  const { products, loading: productsLoading, error: productsError, fetchProducts } = useProducts();
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
+  const { subcategories, loading: subcategoriesLoading, error: subcategoriesError } = useSubcategories();
+  const { brands, loading: brandsLoading, error: brandsError } = useBrands();
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedProductName, setSelectedProductName] = useState("");
+  const { variants, loading: variantsLoading, error: variantsError, fetchVariants } = useVariants(selectedProductId);
+
   const rowsPerPage = 10;
   const [page, setPage] = useState(1);
   const [filterCategory, setFilterCategory] = useState(null);
@@ -53,10 +61,6 @@ export default function ProductsList() {
   const [filterBrand, setFilterBrand] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [productToDelete, setProductToDelete] = useState(null);
-
-  const [selectedProductId, setSelectedProductId] = useState(null);
-  const [selectedProductName, setSelectedProductName] = useState("");
-  const { variants, loading: variantsLoading, error: variantsError } = useVariants(selectedProductId);
 
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -66,41 +70,8 @@ export default function ProductsList() {
   const { isOpen: isVariantDeleteOpen, onOpen: onVariantDeleteOpen, onClose: onVariantDeleteClose } = useDisclosure();
   const [variantToDelete, setVariantToDelete] = useState(null);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await api.get("/categories");
-        setCategories(response.data);
-      } catch (error) {
-        console.error("Error al cargar las categorías:", error);
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    const fetchSubcategories = async () => {
-      try {
-        const response = await api.get("/subcategories");
-        setSubcategories(response.data);
-      } catch (error) {
-        console.error("Error al cargar las subcategorías:", error);
-      }
-    };
-    fetchSubcategories();
-  }, []);
-
-  useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        const response = await api.get("/brands");
-        setBrands(response.data);
-      } catch (error) {
-        console.error("Error al cargar las marcas:", error);
-      }
-    };
-    fetchBrands();
-  }, []);
+  const loading = productsLoading || categoriesLoading || subcategoriesLoading || brandsLoading;
+  const error = productsError || categoriesError || subcategoriesError || brandsError;
 
   const handleFilterCategory = useCallback((key) => {
     if (key === "none") {
@@ -142,8 +113,13 @@ export default function ProductsList() {
   const handleDeleteProduct = useCallback(async () => {
     if (!productToDelete) return;
 
+    const token = Cookies.get("access_token");
     try {
-      await api.delete(`/products/${productToDelete.id}`);
+      await api.delete(`/products/${productToDelete.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
       fetchProducts();
       onClose();
     } catch (error) {
@@ -165,28 +141,33 @@ export default function ProductsList() {
   const handleDeleteVariant = useCallback(async () => {
     if (!variantToDelete) return;
 
+    const token = Cookies.get("access_token");
     try {
-      await api.delete(`/variants/${variantToDelete.id}`);
-      variants.splice(variants.findIndex(v => v.id === variantToDelete.id), 1);
+      await api.delete(`/variants/${variantToDelete.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      fetchVariants();
       onVariantDeleteClose();
     } catch (error) {
       console.error("Error al eliminar variante:", error);
     }
-  }, [variantToDelete, variants, onVariantDeleteClose]);
+  }, [variantToDelete, fetchVariants, onVariantDeleteClose]);
 
   const handleEditVariantClick = useCallback((variant) => {
     router.push(`/dashboard/products/variants/${selectedProductId}/edit/${variant.id}`);
   }, [router, selectedProductId]);
 
   const columns = [
-    { key: 'id', label: '#', sortable: true },
-    { key: 'name', label: 'Nombre', sortable: true },
-    { key: 'description', label: 'Descripción', sortable: false },
-    { key: 'price', label: 'Precio', sortable: true },
-    { key: 'category', label: 'Categoría', sortable: true },
-    { key: 'subcategory', label: 'SubCategoría', sortable: true },
-    { key: 'brand', label: 'Marca', sortable: true },
-    { key: 'actions', label: 'Acciones', sortable: false },
+    { key: 'id', label: '#' },
+    { key: 'name', label: 'Nombre' },
+    { key: 'description', label: 'Descripción' },
+    { key: 'price', label: 'Precio' },
+    { key: 'category', label: 'Categoría' },
+    { key: 'subcategory', label: 'SubCategoría' },
+    { key: 'brand', label: 'Marca' },
+    { key: 'actions', label: 'Acciones' },
   ];
 
   const processedProducts = useMemo(() => {
@@ -389,7 +370,7 @@ export default function ProductsList() {
                   </DropdownItem>
                 ))}
               </DropdownSection>
-              <DropdownItem key="none-category" value="none" className="border-t-1 rounded-t-none">
+              <DropdownItem key="none" value="none" className="border-t-1 rounded-t-none">
                 Quitar Filtro de Categoría
               </DropdownItem>
             </DropdownMenu>
@@ -417,7 +398,7 @@ export default function ProductsList() {
                   </DropdownItem>
                 ))}
               </DropdownSection>
-              <DropdownItem key="none-subcategory" value="none" className="border-t-1 rounded-t-none">
+              <DropdownItem key="none" value="none" className="border-t-1 rounded-t-none">
                 Quitar Filtro de SubCategoría
               </DropdownItem>
             </DropdownMenu>
@@ -445,7 +426,7 @@ export default function ProductsList() {
                   </DropdownItem>
                 ))}
               </DropdownSection>
-              <DropdownItem key="none-brand" value="none" className="border-t-1 rounded-t-none">
+              <DropdownItem key="none" value="none" className="border-t-1 rounded-t-none">
                 Quitar Filtro de Marca
               </DropdownItem>
             </DropdownMenu>
@@ -480,7 +461,6 @@ export default function ProductsList() {
                 <TableColumn
                   key={column.key}
                   className="bg-white text-bold border-b-1"
-                  isSortable={column.sortable}
                 >
                   {renderHeader(column)}
                 </TableColumn>
@@ -620,14 +600,24 @@ export default function ProductsList() {
                 </div>
               </ModalHeader>
               <ModalBody>
-                <VariantsTable
-                  variants={variants}
-                  loading={variantsLoading}
-                  error={variantsError}
-                  productName={selectedProductName}
-                  onDeleteVariant={handleDeleteVariantClick}
-                  onEditVariant={handleEditVariantClick}
-                />
+                {variantsLoading ? (
+                  <div className="flex justify-center items-center p-6">
+                    <Spinner size="lg" />
+                  </div>
+                ) : variantsError ? (
+                  <div className="text-red-500 text-center p-6">
+                    {variantsError}
+                  </div>
+                ) : (
+                  <VariantsTable
+                    variants={variants}
+                    loading={variantsLoading}
+                    error={variantsError}
+                    productName={selectedProductName}
+                    onDeleteVariant={handleDeleteVariantClick}
+                    onEditVariant={handleEditVariantClick}
+                  />
+                )}
               </ModalBody>
               <ModalFooter className="me-4">
                 <Button

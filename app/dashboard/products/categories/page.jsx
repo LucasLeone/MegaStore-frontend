@@ -32,6 +32,7 @@ import { useState, useMemo, useCallback } from "react";
 import useCategories from '@/app/hooks/useCategories';
 import { useRouter } from "next/navigation";
 import api from '@/app/axios';
+import Cookies from "js-cookie";
 
 export default function CategoriesList() {
   const { categories, loading, error, fetchCategories } = useCategories();
@@ -56,8 +57,13 @@ export default function CategoriesList() {
   const handleDeleteCategory = useCallback(async () => {
     if (!categoryToDelete) return;
 
+    const token = Cookies.get('access_token');
     try {
-      await api.delete(`/categories/${categoryToDelete.id}`);
+      await api.delete(`/categories/${categoryToDelete.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
       fetchCategories();
       onClose();
     } catch (error) {

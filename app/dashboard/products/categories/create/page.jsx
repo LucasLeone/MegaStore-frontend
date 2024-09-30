@@ -13,6 +13,7 @@ import { IconPlus, IconArrowLeft } from "@tabler/icons-react";
 import { useState, useCallback } from "react";
 import api from "@/app/axios";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function CreateCategoryPage() {
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,6 @@ export default function CreateCategoryPage() {
 
   const router = useRouter();
 
-  // Función de Validación
   const isValidName = (name) => {
     return name.trim().length > 0;
   };
@@ -32,7 +32,6 @@ export default function CreateCategoryPage() {
     setLoading(true);
     setError(null);
 
-    // Validaciones
     if (!name) {
       setError("Por favor, completa el campo de nombre.");
       setLoading(false);
@@ -57,21 +56,25 @@ export default function CreateCategoryPage() {
       return;
     }
 
-    // Preparar Datos para Enviar
     const categoryData = {
       name: name.trim(),
       description: description.trim(),
     };
 
-    try {
-      await api.post("/categories", categoryData);
+    const token = Cookies.get("access_token");
 
-      // Redireccionar tras la creación exitosa
+    try {
+      await api.post("/categories", categoryData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+      );
+
       router.push("/dashboard/products/categories");
     } catch (error) {
       console.error("Error al crear la categoría:", error);
       if (error.response && error.response.data) {
-        // Mostrar errores específicos de la API
         const apiErrors = Object.values(error.response.data.message);
         setError(apiErrors);
       } else {

@@ -14,6 +14,7 @@ import { useRouter, useParams } from "next/navigation";
 import useProduct from "@/app/hooks/useProduct";
 import Link from "next/link";
 import Image from "next/image";
+import Cookies from "js-cookie";
 
 export default function CreateVariantPage() {
   const router = useRouter();
@@ -64,12 +65,18 @@ export default function CreateVariantPage() {
       image: null,
     };
 
+    const token = Cookies.get("access_token");
+
     try {
       // if (image) {
       //   variantData.image = image; LUEGO SE VA A AGREGAR
       // }
 
-      await api.post("/variants", variantData);
+      await api.post("/variants", variantData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       router.push(`/dashboard/products/`);
     } catch (error) {

@@ -13,6 +13,7 @@ import { IconPlus, IconArrowLeft } from "@tabler/icons-react";
 import { useState, useCallback } from "react";
 import api from "@/app/axios";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function CreateBrandPage() {
   const [loading, setLoading] = useState(false);
@@ -60,8 +61,15 @@ export default function CreateBrandPage() {
       description: description.trim(),
     };
 
+    const token = Cookies.get("access_token");
+
     try {
-      await api.post("/brands", brandData);
+      await api.post("/brands", brandData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+      );
 
       router.push("/dashboard/products/brands");
     } catch (error) {

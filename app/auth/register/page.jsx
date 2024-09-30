@@ -16,6 +16,7 @@ import {
     IconMail,
     IconUser
 } from "@tabler/icons-react";
+import Cookies from "js-cookie";
 
 export default function RegisterPage() {
     const [email, setEmail] = useState("");
@@ -45,6 +46,8 @@ export default function RegisterPage() {
             return;
         }
 
+        const token = Cookies.get('access_token');
+
         try {
             const response = await api.post('/auth/register', {
                 email,
@@ -52,6 +55,10 @@ export default function RegisterPage() {
                 last_name: lastName,
                 password,
                 password_confirmation: passwordConfirmation
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             });
 
             router.push('/auth/login');

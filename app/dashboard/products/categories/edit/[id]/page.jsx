@@ -13,10 +13,11 @@ import { IconEdit, IconArrowLeft } from "@tabler/icons-react";
 import { useState, useCallback, useEffect } from "react";
 import api from "@/app/axios";
 import { useRouter, useParams } from "next/navigation";
+import Cookies from "js-cookie";
+import useCategory from "@/app/hooks/useCategory";
 
 export default function EditCategoryPage() {
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [name, setName] = useState("");
@@ -26,39 +27,29 @@ export default function EditCategoryPage() {
   const params = useParams();
   const { id } = params;
 
+  const { category, loading: initialLoading, error: fetchError } = useCategory(id);
+
+  useEffect(() => {
+    if (category) {
+      setName(category.name);
+      setDescription(category.description || "");
+    }
+  }, [category]);
+
+  useEffect(() => {
+    if (fetchError) {
+      setError(fetchError);
+    }
+  }, [fetchError]);
+
   const isValidName = (name) => {
     return name.trim().length > 0;
   };
-
-  useEffect(() => {
-    const fetchCategory = async () => {
-      setInitialLoading(true);
-      setError(null);
-      try {
-        const response = await api.get(`/categories/${id}`);
-        setName(response.data.name);
-        setDescription(response.data.description || "");
-      } catch (error) {
-        console.error("Error al cargar la categoría:", error);
-        setError("Error al cargar la categoría.");
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchCategory();
-    } else {
-      setError("ID de categoría no proporcionado.");
-      setInitialLoading(false);
-    }
-  }, [id]);
 
   const handleUpdateCategory = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    // Validaciones
     if (!name) {
       setError("Por favor, completa el campo de nombre.");
       setLoading(false);
@@ -72,7 +63,7 @@ export default function EditCategoryPage() {
     }
 
     if (name.length > 30) {
-      setError("El nombre de la marca no puede exceder los 30 caracteres.");
+      setError("El nombre de la categoría no puede exceder los 30 caracteres.");
       setLoading(false);
       return;
     }
@@ -83,23 +74,26 @@ export default function EditCategoryPage() {
       return;
     }
 
-    // Preparar Datos para Enviar
     const categoryData = {
       name: name.trim(),
       description: description.trim(),
     };
 
-    try {
-      await api.put(`/categories/${id}`, categoryData);
+    const token = Cookies.get("access_token");
 
-      // Redireccionar tras la actualización exitosa
+    try {
+      await api.put(`/categories/${id}`, categoryData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       router.push("/dashboard/products/categories");
     } catch (error) {
       console.error("Error al actualizar la categoría:", error);
       if (error.response && error.response.data) {
-        // Mostrar errores específicos de la API
         const apiErrors = Object.values(error.response.data.message);
-        setError(apiErrors);
+        setError(apiErrors.join(", "));
       } else {
         setError("Error al actualizar la categoría.");
       }
@@ -118,7 +112,7 @@ export default function EditCategoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-[92vw]">
-            <div className="flex items-center mb-4 gap-1">
+      <div className="flex items-center mb-4 gap-1">
         <Link href="/dashboard/products/categories">
           <Tooltip content="Volver" placement="bottom">
             <Button variant="light" size="sm" isIconOnly>

@@ -13,10 +13,11 @@ import { IconEdit, IconArrowLeft } from "@tabler/icons-react";
 import { useState, useCallback, useEffect } from "react";
 import api from "@/app/axios";
 import { useRouter, useParams } from "next/navigation";
+import Cookies from "js-cookie";
+import useBrand from "@/app/hooks/useBrand";
 
 export default function EditBrandPage() {
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [name, setName] = useState("");
@@ -26,39 +27,29 @@ export default function EditBrandPage() {
   const params = useParams();
   const { id } = params;
 
+  const { brand, loading: initialLoading, error: fetchError } = useBrand(id);
+
+  useEffect(() => {
+    if (brand) {
+      setName(brand.name);
+      setDescription(brand.description || "");
+    }
+  }, [brand]);
+
+  useEffect(() => {
+    if (fetchError) {
+      setError(fetchError);
+    }
+  }, [fetchError]);
+
   const isValidName = (name) => {
     return name.trim().length > 0;
   };
-
-  useEffect(() => {
-    const fetchBrand = async () => {
-      setInitialLoading(true);
-      setError(null);
-      try {
-        const response = await api.get(`/brands/${id}`);
-        setName(response.data.name);
-        setDescription(response.data.description || "");
-      } catch (error) {
-        console.error("Error al cargar la marca:", error);
-        setError("Error al cargar la marca.");
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchBrand();
-    } else {
-      setError("ID de marca no proporcionado.");
-      setInitialLoading(false);
-    }
-  }, [id]);
 
   const handleUpdateBrand = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    // Validaciones
     if (!name) {
       setError("Por favor, completa el campo de nombre.");
       setLoading(false);
@@ -88,8 +79,14 @@ export default function EditBrandPage() {
       description: description.trim(),
     };
 
+    const token = Cookies.get("access_token");
+
     try {
-      await api.put(`/brands/${id}`, brandData);
+      await api.put(`/brands/${id}`, brandData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       router.push("/dashboard/products/brands");
     } catch (error) {

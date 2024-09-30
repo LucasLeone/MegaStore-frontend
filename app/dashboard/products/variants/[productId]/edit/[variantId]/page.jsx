@@ -15,6 +15,7 @@ import useVariant from "@/app/hooks/useVariant";
 import useProduct from "@/app/hooks/useProduct";
 import Link from "next/link";
 import Image from "next/image";
+import Cookies from "js-cookie";
 
 export default function EditVariantPage() {
   const router = useRouter();
@@ -77,6 +78,7 @@ export default function EditVariantPage() {
       stock: parseInt(stock, 10),
     };
 
+    const token = Cookies.get("access_token");
     try {
       // Manejo de la imagen si se ha cambiado
       if (image) {
@@ -89,10 +91,16 @@ export default function EditVariantPage() {
         await api.put(`/variants/${variantId}`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
           },
         });
       } else {
-        await api.put(`/variants/${variantId}`, variantData);
+        await api.put(`/variants/${variantId}`, variantData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+        );
       }
 
       router.push(`/dashboard/products/`); // O donde desees redirigir

@@ -1,21 +1,14 @@
-// src/app/hooks/useVariant.js
-
 import { useState, useEffect } from 'react';
 import api from '../axios';
+import Cookies from 'js-cookie';
 
-/**
- * Hook para obtener los detalles de una variante específica.
- *
- * @param {string | number} variantId - El ID de la variante a obtener.
- * @returns {object} - Contiene la variante, estados de carga y error.
- */
 const useVariant = (variantId) => {
   const [variant, setVariant] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchVariant = async () => {
-    if (!variantId) {
+  const fetchVariant = async (id) => {
+    if (!id) {
       setVariant(null);
       return;
     }
@@ -23,12 +16,16 @@ const useVariant = (variantId) => {
     setLoading(true);
     setError(null);
 
+    const token = Cookies.get('access_token');
     try {
-      const response = await api.get(`/variants/${variantId}`);
+      const response = await api.get(`/variants/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
       setVariant(response.data);
     } catch (err) {
       console.error('Error al cargar la variante:', err);
-      // Asumiendo que la API devuelve un objeto con `message`
       setError(err.response?.data?.message || 'Error al cargar la variante.');
     } finally {
       setLoading(false);
@@ -36,9 +33,10 @@ const useVariant = (variantId) => {
   };
 
   useEffect(() => {
-    fetchVariant();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [variantId]); // Se vuelve a ejecutar cuando cambia el variantId
+    if (variantId) {
+      fetchVariant(variantId);
+    }
+  }, [variantId]);
 
   return { variant, loading, error, fetchVariant };
 };
