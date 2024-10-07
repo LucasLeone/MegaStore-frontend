@@ -110,9 +110,8 @@ export default function UsersList() {
       });
       // Formatear la dirección
       const address = user.address
-        ? `${user.address.street} ${user.address.number}${
-            user.address.floor ? `, Piso ${user.address.floor}` : ""
-          }${user.address.apartment ? `, Depto ${user.address.apartment}` : ""}, ${user.address.city}, ${user.address.postal_code}, ${user.address.country}`
+        ? `${user.address.street} ${user.address.number}${user.address.floor ? `, Piso ${user.address.floor}` : ""
+        }${user.address.apartment ? `, Depto ${user.address.apartment}` : ""}, ${user.address.city}, ${user.address.postal_code}, ${user.address.country}`
         : "N/A";
       return {
         ...user,
@@ -251,7 +250,14 @@ export default function UsersList() {
           isClearable={true}
         />
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Tooltip content="Ver eliminados">
+            <Link href="/dashboard/products/categories/deleted">
+              <Button className="rounded-md bg-black text-white">
+                Eliminados
+              </Button>
+            </Link>
+          </Tooltip>
           <Dropdown>
             <DropdownTrigger>
               <Button

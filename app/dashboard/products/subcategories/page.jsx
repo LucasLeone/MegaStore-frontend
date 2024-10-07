@@ -241,34 +241,43 @@ export default function SubcategoriesList() {
           aria-label="Buscar subcategorías"
           isClearable={true}
         />
-        <div className="flex space-x-4">
-          {/* Filtro de Categoría */}
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                variant="bordered"
-                className={`rounded-md border-1.5 ${filterCategory ? 'bg-gray-200' : ''}`}
-                aria-label="Filtros de Categoría"
-              >
-                <IconFilter className="h-4 mr-1" />
-                {filterCategory
-                  ? `${(categories || []).find(item => item.id === filterCategory)?.name || "Categoría"}`
-                  : "Categoría"}
+        <div className="flex gap-2 flex-wrap">
+          <Tooltip content="Ver eliminados">
+            <Link href="/dashboard/products/subcategories/deleted">
+              <Button className="rounded-md bg-black text-white">
+                Eliminados
               </Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Filtros de Categoría" onAction={handleFilterCategoryChange}>
-              <DropdownSection className="max-h-60 overflow-y-auto">
-                {(categories || []).map(item => (
-                  <DropdownItem key={item.id} value={item.id}>
-                    {item.name}
-                  </DropdownItem>
-                ))}
-              </DropdownSection>
-              <DropdownItem key="none-category" value="none" className="border-t-1 rounded-t-none">
-                Quitar Filtro de Categoría
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+            </Link>
+          </Tooltip>
+          <div className="flex space-x-4">
+            {/* Filtro de Categoría */}
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  variant="bordered"
+                  className={`rounded-md border-1.5 ${filterCategory ? 'bg-gray-200' : ''}`}
+                  aria-label="Filtros de Categoría"
+                >
+                  <IconFilter className="h-4 mr-1" />
+                  {filterCategory
+                    ? `${(categories || []).find(item => item.id === filterCategory)?.name || "Categoría"}`
+                    : "Categoría"}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Filtros de Categoría" onAction={handleFilterCategoryChange}>
+                <DropdownSection className="max-h-60 overflow-y-auto">
+                  {(categories || []).map(item => (
+                    <DropdownItem key={item.id} value={item.id}>
+                      {item.name}
+                    </DropdownItem>
+                  ))}
+                </DropdownSection>
+                <DropdownItem key="none-category" value="none" className="border-t-1 rounded-t-none">
+                  Quitar Filtro de Categoría
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         </div>
       </div>
 

@@ -206,6 +206,13 @@ export default function BrandsList() {
           aria-label="Buscar marcas"
           isClearable={true}
         />
+        <Tooltip content="Ver eliminados">
+          <Link href="/dashboard/products/brands/deleted">
+            <Button className="rounded-md bg-black text-white">
+              Eliminados
+            </Button>
+          </Link>
+        </Tooltip>
       </div>
 
       {/* Tabla de marcas */}

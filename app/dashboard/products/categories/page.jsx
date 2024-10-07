@@ -202,6 +202,13 @@ export default function CategoriesList() {
           aria-label="Buscar categorías"
           isClearable={true}
         />
+        <Tooltip content="Ver eliminados">
+          <Link href="/dashboard/products/categories/deleted">
+            <Button className="rounded-md bg-black text-white">
+              Eliminados
+            </Button>
+          </Link>
+        </Tooltip>
       </div>
 
       <div className="overflow-x-auto border rounded-md">

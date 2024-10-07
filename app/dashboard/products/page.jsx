@@ -348,7 +348,13 @@ export default function ProductsList() {
           isClearable={true}
         />
         <div className="flex gap-2 flex-wrap">
-          {/* Filtro de Categoría */}
+          <Tooltip content="Ver eliminados">
+            <Link href="/dashboard/products/deleted">
+              <Button className="rounded-md bg-black text-white">
+                Eliminados
+              </Button>
+            </Link>
+          </Tooltip>
           <Dropdown>
             <DropdownTrigger>
               <Button
