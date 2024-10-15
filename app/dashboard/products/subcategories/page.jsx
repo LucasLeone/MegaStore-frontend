@@ -96,31 +96,23 @@ export default function SubcategoriesList() {
     { key: 'actions', label: 'Acciones', sortable: false },
   ];
 
-  const categoryMap = useMemo(() => {
-    const map = {};
-    (categories || []).forEach(cat => {
-      map[cat.id] = cat.name;
-    });
-    return map;
-  }, [categories]);
-
   const filteredSubcategories = useMemo(() => {
     let filtered = [...(subcategories || [])];
 
     if (filterCategory) {
-      filtered = filtered.filter(sub => sub.categoryId === filterCategory);
+      filtered = filtered.filter(sub => sub.category?.id === filterCategory);
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(subcategory =>
-        subcategory.name.toLowerCase().includes(query) ||
-        (subcategory.categoryId && categoryMap[subcategory.categoryId]?.toLowerCase().includes(query))
+        (subcategory.name && subcategory.name.toLowerCase().includes(query)) ||
+        (subcategory.category?.name && subcategory.category.name.toLowerCase().includes(query))
       );
     }
 
     return filtered;
-  }, [subcategories, filterCategory, searchQuery, categoryMap]);
+  }, [subcategories, filterCategory, searchQuery]);
 
   const sortedSubcategories = useMemo(() => {
     return filteredSubcategories;
@@ -172,11 +164,11 @@ export default function SubcategoriesList() {
     currentItems.map(subcategory => ({
       id: subcategory.id,
       name: subcategory.name,
-      categoryName: categoryMap[subcategory.categoryId] || "Sin categoría",
+      categoryName: subcategory.category.name,
       description: subcategory.description,
       actions: renderActions(subcategory),
     }))
-  ), [currentItems, categoryMap, renderActions]);
+  ), [currentItems, renderActions]);
 
   const renderHeader = useCallback((column) => {
     return (

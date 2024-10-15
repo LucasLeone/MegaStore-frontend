@@ -47,9 +47,9 @@ export default function UpdateProductPage() {
       setName(product.name);
       setDescription(product.description || "");
       setPrice(product.price.toString());
-      setCategory(product.categoryId);
-      setSubcategory(product.subcategoryId);
-      setBrand(product.brandId);
+      setCategory(product.category.id);
+      setSubcategory(product.subcategory.id);
+      setBrand(product.brand.id);
     }
   }, [product]);
 

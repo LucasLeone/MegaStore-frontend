@@ -26,7 +26,6 @@ import {
   DropdownSection
 } from "@nextui-org/react";
 import {
-  IconDownload,
   IconPlus,
   IconSearch,
   IconFilter,
@@ -159,44 +158,28 @@ export default function ProductsList() {
     router.push(`/dashboard/products/variants/${selectedProductId}/edit/${variant.id}`);
   }, [router, selectedProductId]);
 
-  const columns = [
-    { key: 'id', label: '#' },
-    { key: 'name', label: 'Nombre' },
-    { key: 'description', label: 'Descripción' },
-    { key: 'price', label: 'Precio' },
-    { key: 'category', label: 'Categoría' },
-    { key: 'subcategory', label: 'SubCategoría' },
-    { key: 'brand', label: 'Marca' },
-    { key: 'actions', label: 'Acciones' },
-  ];
-
   const processedProducts = useMemo(() => {
-    return products.map(product => {
-      const category = categories.find(cat => cat.id === product.categoryId);
-      const subcategory = subcategories.find(sub => sub.id === product.subcategoryId);
-      const brand = brands.find(br => br.id === product.brandId);
-      return {
-        ...product,
-        category: category ? category.name : "Sin categoría",
-        subcategory: subcategory ? subcategory.name : "Sin subcategoría",
-        brand: brand ? brand.name : "Sin marca",
-      };
-    });
-  }, [products, categories, subcategories, brands]);
+    return products.map(product => ({
+      ...product,
+      categoryName: product.category.name,
+      subcategoryName: product.subcategory.name,
+      brandName: product.brand.name,
+    }));
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     let filtered = [...processedProducts];
 
     if (filterCategory) {
-      filtered = filtered.filter(product => product.categoryId === filterCategory);
+      filtered = filtered.filter(product => product.category.id === filterCategory);
     }
 
     if (filterSubcategory) {
-      filtered = filtered.filter(product => product.subcategoryId === filterSubcategory);
+      filtered = filtered.filter(product => product.subcategory.id === filterSubcategory);
     }
 
     if (filterBrand) {
-      filtered = filtered.filter(product => product.brandId === filterBrand);
+      filtered = filtered.filter(product => product.brand.id === filterBrand);
     }
 
     if (searchQuery) {
@@ -204,8 +187,8 @@ export default function ProductsList() {
       filtered = filtered.filter(product =>
         (product.name && product.name.toLowerCase().includes(query)) ||
         (product.description && product.description.toLowerCase().includes(query)) ||
-        (product.category && product.category.toLowerCase().includes(query)) ||
-        (product.brand && product.brand.toLowerCase().includes(query))
+        (product.category.name && product.category.name.toLowerCase().includes(query)) ||
+        (product.brand.name && product.brand.name.toLowerCase().includes(query))
       );
     }
 
@@ -270,15 +253,26 @@ export default function ProductsList() {
     </div>
   ), [handleDeleteClick, handleViewClick, router]);
 
+  const columns = [
+    { key: 'id', label: '#' },
+    { key: 'name', label: 'Nombre' },
+    { key: 'description', label: 'Descripción' },
+    { key: 'price', label: 'Precio' },
+    { key: 'category', label: 'Categoría' },
+    { key: 'subcategory', label: 'SubCategoría' },
+    { key: 'brand', label: 'Marca' },
+    { key: 'actions', label: 'Acciones' },
+  ];
+
   const rows = useMemo(() => (
     currentItems.map(product => ({
       id: product.id,
       name: product.name,
       description: product.description,
       price: `${parseFloat(product.price).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}`,
-      category: product.category,
-      subcategory: product.subcategory,
-      brand: product.brand,
+      category: product.category.name,
+      subcategory: product.subcategory.name,
+      brand: product.brand.name,
       actions: renderActions(product),
     }))
   ), [currentItems, renderActions]);
@@ -355,6 +349,7 @@ export default function ProductsList() {
               </Button>
             </Link>
           </Tooltip>
+          {/* Filtro de Categoría */}
           <Dropdown>
             <DropdownTrigger>
               <Button

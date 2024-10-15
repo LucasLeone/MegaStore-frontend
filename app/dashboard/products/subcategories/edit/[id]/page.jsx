@@ -38,7 +38,7 @@ export default function EditSubcategoryPage() {
     if (subcategory) {
       setName(subcategory.name);
       setDescription(subcategory.description || "");
-      setCategory(subcategory.categoryId);
+      setCategory(subcategory.category.id);
     }
   }, [subcategory]);
 
