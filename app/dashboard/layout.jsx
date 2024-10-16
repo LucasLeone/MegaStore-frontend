@@ -66,39 +66,43 @@ export default function DashboardLayout({ children }) {
 
 
   return (
-    <div className="flex md:min-h-screen flex-wrap md:flex-nowrap">
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-        <SidebarBody className="justify-between gap-10 min-h-screen">
-          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-            {sidebarOpen ? <Logo /> : <LogoIcon />}
-            <div className="mt-8 flex flex-col gap-2">
-              {menuItems.map((item) => (
-                <SidebarLink
-                  key={item.label}
-                  link={item}
-                  onClick={item.onClick}
-                  className={item.className || ""}
-                />
-              ))}
-            </div>
+    <html lang="en">
+      <body>
+        <div className="flex md:min-h-screen flex-wrap md:flex-nowrap">
+          <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
+            <SidebarBody className="justify-between gap-10 min-h-screen">
+              <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+                {sidebarOpen ? <Logo /> : <LogoIcon />}
+                <div className="mt-8 flex flex-col gap-2">
+                  {menuItems.map((item) => (
+                    <SidebarLink
+                      key={item.label}
+                      link={item}
+                      onClick={item.onClick}
+                      className={item.className || ""}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div>
+                {user && (
+                  <SidebarLink
+                    link={{
+                      label: `${user.first_name} ${user.last_name}`,
+                      path: "/dashboard/profile",
+                      icon: <IconUser />,
+                    }}
+                  />
+                )}
+              </div>
+            </SidebarBody>
+          </Sidebar>
+          <div className="flex-grow p-4 mb-10 md:mb-0">
+            {children}
           </div>
-          <div>
-            {user && (
-              <SidebarLink
-                link={{
-                  label: `${user.first_name} ${user.last_name}`,
-                  path: "/dashboard/profile",
-                  icon: <IconUser />,
-                }}
-              />
-            )}
-          </div>
-        </SidebarBody>
-      </Sidebar>
-      <div className="flex-grow p-4 mb-10 md:mb-0">
-        {children}
-      </div>
-    </div>
+        </div>
+      </body>
+    </html>
   );
 }
 
