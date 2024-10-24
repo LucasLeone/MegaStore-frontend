@@ -1,4 +1,3 @@
-// components/BrandsList.js
 "use client";
 
 import {

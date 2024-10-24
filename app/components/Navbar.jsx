@@ -13,11 +13,44 @@ import {
   DropdownMenu,
   DropdownItem,
   DropdownSection,
-  Divider
+  Divider,
+  Badge
 } from "@nextui-org/react";
 import { IconUser, IconShoppingCart } from "@tabler/icons-react";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import api from "../axios";
 
 export default function NavbarHome() {
+  const router = useRouter();
+  const [cartCount, setCartCount] = useState(0);
+
+  const handleLogout = () => {
+    Cookies.remove("token");
+    router.push("/auth/login");
+  }
+
+  const fetchCart = useCallback(() => {
+    const token = Cookies.get('access_token');
+
+    api.get('/carts/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+      .then(response => {
+        setCartCount(response.data.cartItems.length);
+      })
+      .catch(error => {
+        console.error('Error al obtener el carrito:', error);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+
   return (
     <Navbar isBordered>
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
@@ -48,9 +81,15 @@ export default function NavbarHome() {
         </NavbarItem>
         <NavbarItem>
           <Link href="/cart/">
-            <Button isIconOnly variant="light">
-              <IconShoppingCart className="w-6" />
-            </Button>
+            <Badge
+              content={cartCount}
+              size="lg"
+              color="primary"
+            >
+              <Button isIconOnly variant="light">
+                <IconShoppingCart className="w-6" />
+              </Button>
+            </Badge>
           </Link>
         </NavbarItem>
         <NavbarItem>
@@ -69,12 +108,12 @@ export default function NavbarHome() {
                 <DropdownItem key="metodospago">Métodos de Pago</DropdownItem>
               </DropdownSection>
               <DropdownSection>
-                <DropdownItem key="cerrarsesion" color="danger">Cerrar Sesión</DropdownItem>
+                <DropdownItem key="cerrarsesion" color="danger" onPress={handleLogout}>Cerrar Sesión</DropdownItem>
               </DropdownSection>
             </DropdownMenu>
           </Dropdown>
         </NavbarItem>
       </NavbarContent>
-    </Navbar>
+    </Navbar >
   );
 }
