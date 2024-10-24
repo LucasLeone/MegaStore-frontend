@@ -169,7 +169,7 @@ export default function Home() {
                       flat
                       color="secondary"
                       size="sm"
-                      onPress={() => router.push(`/productos/${product.id}`)}
+                      onPress={() => router.push(`/products/${product.id}`)}
                     >
                       Ver Detalles
                     </Button>
