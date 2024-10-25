@@ -7,11 +7,12 @@ import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({ children }) {
   const url = usePathname().split("/")[1];
+  const fullPath = usePathname();
   return (
     <html lang="en">
       <body>
         <Toaster />
-        {url !== "dashboard" && <NavbarHome />}
+        {url !== "dashboard" && fullPath !== "/auth/login" && <NavbarHome />}
         {children}
       </body>
     </html>

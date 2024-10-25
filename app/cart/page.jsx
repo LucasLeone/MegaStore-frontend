@@ -84,6 +84,8 @@ export default function CartPage() {
 
   const columns = useMemo(() => [
     { key: 'product', label: 'Producto' },
+    { key: "size", label: "Talle" },
+    { key: "color", label: "Color" },
     { key: 'price', label: 'Precio' },
     { key: 'quantity', label: 'Cantidad' },
     { key: 'subtotal', label: 'Subtotal' },
@@ -93,6 +95,8 @@ export default function CartPage() {
   const rows = useMemo(() => (
     cart ? cart.cartItems.map(item => ({
       product: item.variant.product.name,
+      size: item.variant.size,
+      color: item.variant.color,
       price: parseFloat(item.productPrice).toLocaleString("es-AR", { style: "currency", currency: "ARS" }),
       quantity: (
         <QuantitySelector
