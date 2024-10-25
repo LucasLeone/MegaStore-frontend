@@ -13,7 +13,6 @@ import {
   DropdownMenu,
   DropdownItem,
   DropdownSection,
-  Divider,
   Badge
 } from "@nextui-org/react";
 import { IconUser, IconShoppingCart } from "@tabler/icons-react";
@@ -102,7 +101,7 @@ export default function NavbarHome() {
             <DropdownMenu aria-label="Dropdown de cuenta">
               <DropdownSection showDivider title="Mi Cuenta">
                 {/* <DropdownItem key="none"><Divider /></DropdownItem> */}
-                <DropdownItem key="perfil">Perfil</DropdownItem>
+                <DropdownItem key="perfil" href="/profile">Perfil</DropdownItem>
                 <DropdownItem key="ordenes">Órdenes</DropdownItem>
                 <DropdownItem key="direcciones">Direcciones</DropdownItem>
                 <DropdownItem key="metodospago">Métodos de Pago</DropdownItem>
