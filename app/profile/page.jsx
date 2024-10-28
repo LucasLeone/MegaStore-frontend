@@ -21,10 +21,12 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Input,
   useDisclosure,
 } from "@nextui-org/react";
 import Cookies from "js-cookie";
 import api from "@/app/axios";
+import { IconPencil } from "@tabler/icons-react";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -41,9 +43,30 @@ export default function ProfilePage() {
 
   const token = Cookies.get("access_token");
 
-  // Estados para el modal
+  // Estados para el modal de ver detalles de la orden
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // Estados para el modal de edición de perfil
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onOpenChange: onEditOpenChange,
+  } = useDisclosure();
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState(null);
+
+  // Estados para el formulario de edición
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [floor, setFloor] = useState("");
+  const [apartment, setApartment] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
 
   // Primer useEffect para obtener el usuario
   useEffect(() => {
@@ -60,6 +83,17 @@ export default function ProfilePage() {
           },
         });
         setUser(response.data);
+        // Prellenar los campos del formulario de edición
+        setFirstName(response.data.first_name);
+        setLastName(response.data.last_name);
+        setPhoneNumber(response.data.phone_number);
+        setStreet(response.data.address.street);
+        setNumber(response.data.address.number);
+        setFloor(response.data.address.floor || "");
+        setApartment(response.data.address.apartment || "");
+        setCity(response.data.address.city);
+        setPostalCode(response.data.address.postal_code);
+        setCountry(response.data.address.country);
         setIsLoadingUser(false);
       } catch (error) {
         console.error("Error al obtener el usuario:", error);
@@ -110,6 +144,47 @@ export default function ProfilePage() {
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     onOpen();
+  };
+
+  // Función para manejar la actualización del perfil
+  const handleUpdateProfile = async () => {
+    setEditLoading(true);
+    setEditError(null);
+
+    // Preparar el cuerpo de la solicitud
+    const updateData = {
+      first_name: firstName,
+      last_name: lastName,
+      phone_number: phoneNumber,
+      address: {
+        id: user.address.id, // Asegurarse de incluir el ID de la dirección existente
+        street,
+        number,
+        floor: floor || null,
+        apartment: apartment || null,
+        city,
+        postal_code: postalCode,
+        country,
+      },
+    };
+
+    try {
+      const response = await api.put("/users/me", updateData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      // Actualizar el estado del usuario con los nuevos datos
+      setUser(response.data);
+      // Cerrar el modal de edición
+      onEditOpenChange(false);
+    } catch (error) {
+      console.error("Error al actualizar el perfil:", error);
+      setEditError("No se pudo actualizar el perfil. Por favor, intenta de nuevo.");
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   return (
@@ -179,10 +254,141 @@ export default function ProfilePage() {
         </ModalContent>
       </Modal>
 
+      {/* Modal para editar el perfil */}
+      <Modal isOpen={isEditOpen} onOpenChange={onEditOpenChange} size="2xl">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="text-xl font-semibold">
+                Editar Perfil
+              </ModalHeader>
+              <ModalBody>
+                {editError && (
+                  <div className="text-red-500 mb-2">{editError}</div>
+                )}
+                <div className="space-y-4">
+                  {/* Nombre */}
+                  <div className="flex flex-col">
+                    <label className="font-medium">Nombre</label>
+                    <Input
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Nombre"
+                    />
+                  </div>
+                  {/* Apellido */}
+                  <div className="flex flex-col">
+                    <label className="font-medium">Apellido</label>
+                    <Input
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Apellido"
+                    />
+                  </div>
+                  {/* Teléfono */}
+                  <div className="flex flex-col">
+                    <label className="font-medium">Teléfono</label>
+                    <Input
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="Teléfono"
+                    />
+                  </div>
+                  {/* Dirección */}
+                  <div className="flex space-x-4">
+                    <div className="flex flex-col w-1/2">
+                      <label className="font-medium">Calle</label>
+                      <Input
+                        value={street}
+                        onChange={(e) => setStreet(e.target.value)}
+                        placeholder="Calle"
+                      />
+                    </div>
+                    <div className="flex flex-col w-1/2">
+                      <label className="font-medium">Número</label>
+                      <Input
+                        value={number}
+                        onChange={(e) => setNumber(e.target.value)}
+                        placeholder="Número"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex space-x-4">
+                    <div className="flex flex-col w-1/2">
+                      <label className="font-medium">Piso</label>
+                      <Input
+                        value={floor}
+                        onChange={(e) => setFloor(e.target.value)}
+                        placeholder="Piso (opcional)"
+                      />
+                    </div>
+                    <div className="flex flex-col w-1/2">
+                      <label className="font-medium">Departamento</label>
+                      <Input
+                        value={apartment}
+                        onChange={(e) => setApartment(e.target.value)}
+                        placeholder="Departamento (opcional)"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="font-medium">Ciudad</label>
+                    <Input
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Ciudad"
+                    />
+                  </div>
+                  <div className="flex space-x-4">
+                    <div className="flex flex-col w-1/2">
+                      <label className="font-medium">Código Postal</label>
+                      <Input
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
+                        placeholder="Código Postal"
+                      />
+                    </div>
+                    <div className="flex flex-col w-1/2">
+                      <label className="font-medium">País</label>
+                      <Input
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        placeholder="País"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="secondary"
+                  variant="light"
+                  onPress={onClose}
+                  disabled={editLoading}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  color="primary"
+                  onPress={handleUpdateProfile}
+                  disabled={editLoading}
+                >
+                  {editLoading ? <Spinner size="sm" /> : "Guardar Cambios"}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
       {/* Tarjeta de Perfil */}
       <Card className="p-2">
-        <CardHeader>
+        <CardHeader className="flex justify-between">
           <p className="text-xl font-semibold">Mi Perfil</p>
+          <Button color="primary" onPress={onEditOpen}>
+            <IconPencil className="h-4 mr-1" />
+            Editar
+          </Button>
         </CardHeader>
         <Divider />
         <CardBody>
@@ -205,13 +411,11 @@ export default function ProfilePage() {
               </p>
               <p>
                 <strong>Dirección:</strong>{" "}
-                {`${user.address.street} ${user.address.number}${
-                  user.address.floor ? `, Piso: ${user.address.floor}` : ""
-                }${
-                  user.address.apartment
+                {`${user.address.street} ${user.address.number}${user.address.floor ? `, Piso: ${user.address.floor}` : ""
+                  }${user.address.apartment
                     ? `, Depto: ${user.address.apartment}`
                     : ""
-                }, ${user.address.city}, ${user.address.postal_code}, ${user.address.country}`}
+                  }, ${user.address.city}, ${user.address.postal_code}, ${user.address.country}`}
               </p>
             </div>
           )}
