@@ -32,6 +32,7 @@ export default function DashboardLayout({ children }) {
     // { label: "Estadísticas", path: "/dashboard/statitics", icon: <IconChartBar /> },
     { label: "Productos", path: "/dashboard/products", icon: <IconPackage /> },
     { label: "Usuarios", path: "/dashboard/users", icon: <IconUsersGroup /> },
+    { label: "Ventas", path: "/dashboard/sales", icon: <IconChartBar /> },
     {
       label: "Cerrar sesión",
       icon: <IconArrowLeft />,
