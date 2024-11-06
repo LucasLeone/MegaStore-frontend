@@ -82,11 +82,11 @@ export default function SalesPage() {
               size="sm"
               onPress={() => handleViewDetails(sale)}
               aria-label={`Ver detalles de la venta ${sale.id}`}
+              isIconOnly
             >
               <IconEye className="h-5" />
             </Button>
           </Tooltip>
-          {/* Puedes agregar más acciones aquí, como Editar o Eliminar si es necesario */}
         </div>
       ),
     }))
@@ -186,6 +186,9 @@ export default function SalesPage() {
                     </div>
                     <div>
                       <strong>Teléfono:</strong> {selectedSale.user.phone_number}
+                    </div>
+                    <div>
+                      <strong>Nombre completo:</strong> {selectedSale.fullName}
                     </div>
                     <div>
                       <strong>Dirección:</strong> {`${selectedSale.address}, ${selectedSale.city}, ${selectedSale.postalCode}, ${selectedSale.country}`}
