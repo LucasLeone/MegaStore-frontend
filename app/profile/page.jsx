@@ -28,6 +28,19 @@ import Cookies from "js-cookie";
 import api from "@/app/axios";
 import { IconPencil } from "@tabler/icons-react";
 
+// Mapa de traducción de estados
+const statusMap = {
+  IN_PROCESS: "En Proceso",
+  SENT: "Enviado",
+  COMPLETED: "Completado",
+  CANCELED: "Cancelado",
+};
+
+// Función para obtener el texto del estado en español
+const getStatusText = (status) => {
+  return statusMap[status] || status;
+};
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
@@ -205,11 +218,23 @@ export default function ProfilePage() {
                       {new Date(selectedOrder.saleDate).toLocaleDateString()}
                     </p>
                     <p>
-                      <strong>Total:</strong> $
-                      {selectedOrder.totalAmount.toLocaleString()}
+                      <strong>Total:</strong> ${selectedOrder.totalAmount.toLocaleString()}
                     </p>
                     <p>
-                      <strong>Metodo de pago:</strong> {selectedOrder.paymentMethod}
+                      <strong>Método de Pago:</strong> {selectedOrder.paymentMethod}
+                    </p>
+                    <p>
+                      <strong>Estado:</strong> {getStatusText(selectedOrder.status)}
+                    </p>
+                    <p>
+                      <strong>Nombre Completo:</strong> {selectedOrder.fullName}
+                    </p>
+                    <p>
+                      <strong>Dirección de Envío:</strong>{" "}
+                      {`${selectedOrder.address}, ${selectedOrder.city}, ${selectedOrder.state}, ${selectedOrder.postalCode}, ${selectedOrder.country}`}
+                    </p>
+                    <p>
+                      <strong>Método de Envío:</strong> {selectedOrder.shippingMethod} - ${selectedOrder.shippingCost.toLocaleString()}
                     </p>
                     <Divider className="my-2" />
                     <h3 className="text-lg font-semibold">Detalles de la Venta:</h3>
@@ -229,12 +254,8 @@ export default function ProfilePage() {
                             <TableCell>{detail.variant.color}</TableCell>
                             <TableCell>{detail.variant.size}</TableCell>
                             <TableCell>{detail.quantity}</TableCell>
-                            <TableCell>
-                              ${detail.unitPrice.toLocaleString()}
-                            </TableCell>
-                            <TableCell>
-                              ${detail.subtotal.toLocaleString()}
-                            </TableCell>
+                            <TableCell>${detail.unitPrice.toLocaleString()}</TableCell>
+                            <TableCell>${detail.subtotal.toLocaleString()}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -445,6 +466,9 @@ export default function ProfilePage() {
                     <TableColumn>ID de Orden</TableColumn>
                     <TableColumn>Fecha</TableColumn>
                     <TableColumn>Total</TableColumn>
+                    <TableColumn>Método de Envio</TableColumn>
+                    <TableColumn>Método de Pago</TableColumn>
+                    <TableColumn>Estado</TableColumn>
                     <TableColumn>Acciones</TableColumn>
                   </TableHeader>
                   <TableBody>
@@ -457,6 +481,9 @@ export default function ProfilePage() {
                         <TableCell>
                           ${order.totalAmount.toLocaleString()}
                         </TableCell>
+                        <TableCell>{order.shippingMethod.charAt(0).toUpperCase() + order.shippingMethod.slice(1)} - ${order.shippingCost.toLocaleString()}</TableCell>
+                        <TableCell>{order.paymentMethod}</TableCell>
+                        <TableCell>{getStatusText(order.status)}</TableCell>
                         <TableCell>
                           <Button
                             size="sm"

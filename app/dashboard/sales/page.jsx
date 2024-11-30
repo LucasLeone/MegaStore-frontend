@@ -17,13 +17,33 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Tooltip,
   useDisclosure,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@nextui-org/react";
-import { IconChevronDown, IconEye } from "@tabler/icons-react";
+import { IconDots } from "@tabler/icons-react";
+import api from "@/app/axios";
+import Cookies from "js-cookie";
+import toast from "react-hot-toast";
+
+// Mapa de traducción de estados
+const statusMap = {
+  IN_PROCESS: "En Proceso",
+  SENT: "Enviado",
+  COMPLETED: "Completado",
+  CANCELED: "Cancelado",
+  // Agrega más estados si es necesario
+};
+
+// Función para obtener el texto del estado en español
+const getStatusText = (status) => {
+  return statusMap[status] || status; // Retorna el estado original si no está en el mapa
+};
 
 export default function SalesPage() {
-  const { sales, loading, error, refetch } = useSales();
+  const { sales, loading, error, fetchSales: refetch } = useSales();
   const [currentPage, setCurrentPage] = useState(1);
   const salesPerPage = 5; // Puedes ajustar este valor según tus necesidades
 
@@ -43,10 +63,54 @@ export default function SalesPage() {
   };
 
   // Función para abrir el modal con los detalles de la venta seleccionada
-  const handleViewDetails = (sale) => {
+  const handleViewDetails = useCallback((sale) => {
     setSelectedSale(sale);
     onOpen();
-  };
+  }, [onOpen]);
+
+  const markAsSent = useCallback(async (saleId) => {
+    try {
+      await api.post(`/sales/${saleId}/sent`, null, {
+        headers: {
+          "Authorization": `Bearer ${Cookies.get("access_token")}`,
+        }
+      });
+      refetch();
+      toast.success("Venta marcada como enviada correctamente.");
+    } catch (error) {
+      console.error(`Error al marcar la venta ${saleId} como enviada:`, error);
+    }
+  }, [refetch]);
+
+  // Función para marcar la venta como completada
+  const markAsCompleted = useCallback(async (saleId) => {
+    try {
+      await api.post(`/sales/${saleId}/completed`, null, {
+        headers: {
+          "Authorization": `Bearer ${Cookies.get("access_token")}`,
+        }
+      });
+      refetch();
+      toast.success("Venta marcada como completada correctamente.");
+    } catch (error) {
+      console.error(`Error al marcar la venta ${saleId} como completada:`, error);
+    }
+  }, [refetch]);
+
+  // Función para marcar la venta como cancelada
+  const markAsCanceled = useCallback(async (saleId) => {
+    try {
+      await api.post(`/sales/${saleId}/canceled`, null, {
+        headers: {
+          "Authorization": `Bearer ${Cookies.get("access_token")}`,
+        }
+      });
+      refetch();
+      toast.success("Venta marcada como cancelada correctamente.");
+    } catch (error) {
+      console.error(`Error al marcar la venta ${saleId} como cancelada:`, error);
+    }
+  }, [refetch]);
 
   // Definir las columnas de la tabla
   const columns = [
@@ -55,42 +119,82 @@ export default function SalesPage() {
     { key: 'user', label: 'Usuario' },
     { key: 'paymentMethod', label: 'Método de Pago' },
     { key: 'totalAmount', label: 'Total' },
+    { key: 'state', label: 'Estado' },
     { key: 'actions', label: 'Acciones' },
   ];
 
-  // Procesar las ventas para la tabla
-  const rows = useMemo(() => (
-    currentSales.map(sale => ({
-      id: sale.id,
-      saleDate: new Date(sale.saleDate).toLocaleString('es-AR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
+  // Procesar las ventas para la tabla con traducción de estados
+  // Procesar las ventas para la tabla con traducción de estados y disabledKeys
+  const rows = useMemo(
+    () =>
+      currentSales.map((sale) => {
+        // Determinar qué acciones deben estar deshabilitadas
+        const disabledKeys = [];
+        if (sale.status !== "IN_PROCESS") disabledKeys.push("mark-sent");
+        if (sale.status !== "SENT") disabledKeys.push("mark-completed");
+        if (sale.status === "CANCELED") disabledKeys.push("mark-canceled");
+        // "mark-canceled" siempre está habilitado, por lo que no lo añadimos a disabledKeys
+
+        return {
+          id: sale.id,
+          saleDate: new Date(sale.saleDate).toLocaleString("es-AR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }),
+          user: `${sale.user.first_name} ${sale.user.last_name}`,
+          paymentMethod: sale.paymentMethod,
+          totalAmount: `$${sale.totalAmount.toLocaleString("es-AR")}`,
+          state: getStatusText(sale.status), // Traducción del estado
+          actions: (
+            <div className="flex gap-2">
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button variant="light" isIconOnly>
+                    <IconDots className="h-5" />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Opciones de la Venta"
+                  disabledKeys={disabledKeys} // Pasar las claves deshabilitadas
+                >
+                  <DropdownItem
+                    onPress={() => handleViewDetails(sale)}
+                    aria-label={`Ver detalles de la venta ${sale.id}`}
+                    key="view-details"
+                  >
+                    Ver Detalles
+                  </DropdownItem>
+                  <DropdownItem
+                    key="mark-sent"
+                    onPress={() => markAsSent(sale.id)}
+                  >
+                    Marcar como enviado
+                  </DropdownItem>
+                  <DropdownItem
+                    key="mark-completed"
+                    onPress={() => markAsCompleted(sale.id)}
+                  >
+                    Marcar como completado
+                  </DropdownItem>
+                  <DropdownItem
+                    key="mark-canceled"
+                    onPress={() => markAsCanceled(sale.id)}
+                  >
+                    Marcar como cancelado
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          ),
+        };
       }),
-      user: `${sale.user.first_name} ${sale.user.last_name}`,
-      paymentMethod: sale.paymentMethod,
-      totalAmount: `$${sale.totalAmount.toLocaleString('es-AR')}`,
-      actions: (
-        <div className="flex gap-2">
-          <Tooltip content="Ver Detalles">
-            <Button
-              variant="light"
-              color="primary"
-              size="sm"
-              onPress={() => handleViewDetails(sale)}
-              aria-label={`Ver detalles de la venta ${sale.id}`}
-              isIconOnly
-            >
-              <IconEye className="h-5" />
-            </Button>
-          </Tooltip>
-        </div>
-      ),
-    }))
-  ), [currentSales, handleViewDetails]);
+    [currentSales, handleViewDetails, markAsSent, markAsCompleted, markAsCanceled]
+  );
+
 
   // Renderizar el encabezado de la tabla
   const renderHeader = useCallback((column) => (
@@ -101,7 +205,7 @@ export default function SalesPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-[92vw]">
-      
+
       {/* Título de la Página */}
       <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center mb-6">
         <p className="text-2xl font-bold mb-4 md:mb-0">Ventas</p>
@@ -198,6 +302,9 @@ export default function SalesPage() {
                     </div>
                     <div>
                       <strong>Total:</strong> ${selectedSale.totalAmount.toLocaleString('es-AR')}
+                    </div>
+                    <div>
+                      <strong>Estado:</strong> {getStatusText(selectedSale.status)}
                     </div>
                     <div className="mt-4">
                       <h3 className="text-lg font-semibold">Detalles de la Venta:</h3>

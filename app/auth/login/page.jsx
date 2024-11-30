@@ -116,7 +116,7 @@ export default function LoginPage() {
                 Iniciar sesión
             </Button>
             <div className="text-center mt-2 flex flex-row justify-center items-center gap-2">
-                <Link className='text-center' href='/auth/reset-password-request'>
+                <Link className='text-center' href='/auth/reset-password'>
                     ¿Olvidaste tu contraseña?
                 </Link>
                 <span className='text-center'>·</span>

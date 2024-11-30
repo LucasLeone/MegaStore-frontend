@@ -31,6 +31,7 @@ export default function RegisterPage() {
         floor: "",
         apartment: "",
         city: "",
+        state: "",
         postalCode: "",
         country: ""
     });
@@ -88,6 +89,7 @@ export default function RegisterPage() {
                     floor: address.floor,
                     apartment: address.apartment,
                     city: address.city,
+                    state: address.state,
                     postal_code: address.postalCode,
                     country: address.country
                 }
@@ -277,19 +279,34 @@ export default function RegisterPage() {
                     />
                 </div>
 
-                <Input
-                    type="text"
-                    label='Ciudad'
-                    placeholder='Arroyo Cabral'
-                    value={address.city}
-                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                    className='flex-1 mb-4'
-                    startContent={
-                        <div className="pointer-events-none flex items-center">
-                            <IconUser className="h-5 text-default-500" />
-                        </div>
-                    }
-                />
+                <div className="flex flex-col md:flex-row gap-4">
+                    <Input
+                        type="text"
+                        label='Ciudad'
+                        placeholder='Arroyo Cabral'
+                        value={address.city}
+                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                        className='flex-1 mb-4'
+                        startContent={
+                            <div className="pointer-events-none flex items-center">
+                                <IconUser className="h-5 text-default-500" />
+                            </div>
+                        }
+                    />
+                    <Input
+                        type="text"
+                        label='Provincia'
+                        placeholder='Córdoba'
+                        value={address.state}
+                        onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                        className='flex-1'
+                        startContent={
+                            <div className="pointer-events-none flex items-center">
+                                <IconUser className="h-5 text-default-500" />
+                            </div>
+                        }
+                    />
+                </div>
 
                 <div className="flex flex-col md:flex-row gap-4 mb-4">
                     <Input

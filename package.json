@@ -13,10 +13,12 @@
     "@nextui-org/react": "^2.4.8",
     "@tabler/icons-react": "^3.17.0",
     "axios": "^1.7.7",
+    "chart.js": "^4.4.6",
     "framer-motion": "^11.5.4",
     "js-cookie": "^3.0.5",
     "next": "14.2.11",
     "react": "^18",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1"
   },

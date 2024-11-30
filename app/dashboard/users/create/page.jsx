@@ -36,6 +36,7 @@ export default function CreateUserPage() {
     floor: "",
     apartment: "",
     city: "",
+    state: "",
     postalCode: "",
     country: "",
   });
@@ -61,6 +62,7 @@ export default function CreateUserPage() {
       !address.street ||
       !address.number ||
       !address.city ||
+      !address.state ||
       !address.postalCode ||
       !address.country
     ) {
@@ -103,6 +105,7 @@ export default function CreateUserPage() {
         floor: address.floor || null,
         apartment: address.apartment || null,
         city: address.city,
+        state: address.state || null,
         postal_code: address.postalCode,
         country: address.country,
       },
@@ -390,6 +393,20 @@ export default function CreateUserPage() {
               variant="underlined"
               aria-label="Ciudad"
               isRequired
+              startContent={
+                <div className="pointer-events-none flex items-center">
+                  <IconUser className="h-5 text-default-500" />
+                </div>
+              }
+            />
+            <Input
+              label="Provincia"
+              placeholder="Córdoba"
+              value={address.state}
+              onChange={(e) => setAddress({ ...address, state: e.target.value })}
+              className="flex-1"
+              variant="underlined"
+              aria-label="Provincia"
               startContent={
                 <div className="pointer-events-none flex items-center">
                   <IconUser className="h-5 text-default-500" />

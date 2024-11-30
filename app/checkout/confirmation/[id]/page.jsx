@@ -132,6 +132,7 @@ export default function ConfirmationPage() {
             <p><strong>Nombre Completo:</strong> {sale.fullName}</p>
             <p><strong>Dirección:</strong> {sale.address}</p>
             <p><strong>Ciudad:</strong> {sale.city}</p>
+            <p><strong>Provincia:</strong> {sale.state}</p>
             <p><strong>Código Postal:</strong> {sale.postalCode}</p>
             <p><strong>País:</strong> {sale.country}</p>
           </div>
