@@ -1,291 +1,374 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import api from "@/app/axios";
+import useReports from "@/app/hooks/useReports";
+import useCustomersStatistics from "@/app/hooks/useCustomersStatistics";
+import useUsers from "@/app/hooks/useUsers";
+import useBrands from "@/app/hooks/useBrands";
+import useCategories from "@/app/hooks/useCategories";
+import useSubcategories from "@/app/hooks/useSubcategories";
+import { useSearchParams } from 'next/navigation';
 import {
-    Tabs,
-    Tab,
-    Button,
-    Input,
-    Code,
-    Table,
-    Card,
-    CardHeader,
-    CardBody,
-    Text,
-    Spacer,
-    TableHeader,
-    TableColumn,
-    TableBody,
-    TableRow,
+  Button,
+  Select,
+  SelectItem,
+  Autocomplete,
+  AutocompleteItem,
+  DateRangePicker
 } from "@nextui-org/react";
-import { Line, Bar, Pie } from "react-chartjs-2";
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-} from "chart.js";
+import { parseDate } from "@internationalized/date";
+import dynamic from 'next/dynamic';
+const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend
-);
+export default function StatsPage() {
+  const searchParams = useSearchParams();
 
-export default function AdminPage() {
-    const [activeTab, setActiveTab] = useState("salesReport");
-    const [period, setPeriod] = useState("daily");
-    const [salesReport, setSalesReport] = useState(null);
-    const [customerStats, setCustomerStats] = useState(null);
-    const [error, setError] = useState(null);
-    const [loadingSales, setLoadingSales] = useState(false);
-    const [loadingStats, setLoadingStats] = useState(false);
+  // Inicializar filtros con nombres de clave consistentes
+  const initialFilters = {
+    period: searchParams.get('period') || '',
+    brand: searchParams.get('brand') || '',
+    category: searchParams.get('category') || '',
+    subcategory: searchParams.get('subcategory') || '',
+    startDate: searchParams.get('startDate') || '',
+    endDate: searchParams.get('endDate') || '',
+    customerId: searchParams.get('customerId') || '',
+  };
 
-    // Función para obtener el informe de ventas
-    const fetchSalesReport = async () => {
-        setLoadingSales(true);
-        setError(null);
-        try {
-            const response = await api.get("/sales/reports", {
-                params: { period },
-            });
-            setSalesReport(response.data);
-        } catch (err) {
-            console.error("Error al obtener el informe de ventas:", err);
-            setError("No se pudo obtener el informe de ventas.");
-        } finally {
-            setLoadingSales(false);
-        }
-    };
+  // Inicializar dateRange con objetos DateValue o null
+  const [dateRange, setDateRange] = useState({
+    start: initialFilters.startDate ? parseDate(initialFilters.startDate) : null,
+    end: initialFilters.endDate ? parseDate(initialFilters.endDate) : null,
+  });
 
-    // Función para obtener las estadísticas de clientes
-    const fetchCustomerStatistics = async () => {
-        setLoadingStats(true);
-        setError(null);
-        try {
-            const response = await api.get("/sales/customer-statistics");
-            setCustomerStats(response.data);
-        } catch (err) {
-            console.error("Error al obtener las estadísticas de clientes:", err);
-            setError("No se pudo obtener las estadísticas de clientes.");
-        } finally {
-            setLoadingStats(false);
-        }
-    };
+  const [filters, setFilters] = useState(initialFilters);
 
-    // Efecto para cargar las estadísticas de clientes al montar la página
-    useEffect(() => {
-        if (activeTab === "customerStats") {
-            fetchCustomerStatistics();
-        }
-    }, [activeTab]);
+  const { reports, loading: loadingReports, error: errorReports, fetchReports } = useReports();
+  const { customersStatistics, loading: loadingCustomersStatistics, error: errorCustomersStatistics } = useCustomersStatistics();
+  const { users, loading: loadingUsers, error: errorUsers } = useUsers();
+  const { brands, loading: loadingBrands, error: errorBrands } = useBrands();
+  const { categories, loading: loadingCategories, error: errorCategories } = useCategories();
+  const { subcategories, loading: loadingSubcategories, error: errorSubcategories } = useSubcategories();
 
-    return (
-        <div className="container mx-auto p-4">
-            <Card>
-                <CardHeader>
-                    <p>Panel de Administrador</p>
-                </CardHeader>
-                <CardBody>
-                    <Tabs
-                        value={activeTab}
-                        onChange={(value) => setActiveTab(value)}
-                        aria-label="Panel de Administrador"
-                    >
-                        <Tab key="salesReport" title="Informes de Ventas">
-                            <Spacer y={1} />
-                            <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-                                <Input
-                                    clearable
-                                    label="Período"
-                                    placeholder="Selecciona un período"
-                                    value={period}
-                                    onChange={(e) => setPeriod(e.target.value)}
-                                    width="200px"
-                                    list="periodOptions"
-                                />
-                                <datalist id="periodOptions">
-                                    <option value="daily" />
-                                    <option value="weekly" />
-                                    <option value="monthly" />
-                                </datalist>
-                                <Button
-                                    onClick={fetchSalesReport}
-                                    disabled={loadingSales}
-                                >
-                                    {loadingSales ? "Cargando..." : "Generar Informe"}
-                                </Button>
-                            </div>
-                            <Spacer y={1} />
-                            {error && <Code color="danger">{error}</Code>}
-                            {salesReport && (
-                                <div className="mt-4">
-                                    <p>Total de Ventas: ${salesReport.totalSales}</p>
-                                    <p>Número de Pedidos: {salesReport.totalOrders}</p>
-                                    <Spacer y={1} />
-                                    <Bar
-                                        data={{
-                                            labels: Object.keys(salesReport.topProducts),
-                                            datasets: [
-                                                {
-                                                    label: "Productos Más Vendidos",
-                                                    data: Object.values(salesReport.topProducts),
-                                                    backgroundColor: "rgba(75, 192, 192, 0.6)",
-                                                },
-                                            ],
-                                        }}
-                                        options={{
-                                            responsive: true,
-                                            plugins: {
-                                                legend: {
-                                                    position: "top",
-                                                },
-                                                title: {
-                                                    display: true,
-                                                    text: "Productos Más Vendidos",
-                                                },
-                                            },
-                                        }}
-                                    />
-                                    <Spacer y={2} />
-                                    <Table
-                                        aria-label="Tabla de Ventas"
-                                        css={{
-                                            height: "auto",
-                                            minWidth: "100%",
-                                        }}
-                                    >
-                                        <TableHeader>
-                                            <TableColumn>Producto</TableColumn>
-                                            <TableColumn>Cantidad Vendida</TableColumn>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {Object.entries(salesReport.topProducts).map(
-                                                ([product, quantity]) => (
-                                                    <TableRow key={product}>
-                                                        <TableCell>{product}</TableCell>
-                                                        <TableCell>{quantity}</TableCell>
-                                                    </TableRow>
-                                                )
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
-                        </Tab>
-                        <Tab key="customerStats" title="Estadísticas de Clientes">
-                            <Spacer y={1} />
-                            {loadingStats ? (
-                                <p>Loading...</p>
-                            ) : (
-                                <>
-                                    {error && <Code color="danger">{error}</Code>}
-                                    {customerStats && (
-                                        <div className="mt-4">
-                                            <p>Valor Promedio del Pedido: ${customerStats.averageOrderValue.toFixed(2)}</p>
-                                            <Spacer y={1} />
-                                            
-                                            <Bar
-                                                data={{
-                                                    labels: Object.keys(customerStats.favoriteProducts),
-                                                    datasets: [
-                                                        {
-                                                            label: "Productos Favoritos",
-                                                            data: Object.values(customerStats.favoriteProducts),
-                                                            backgroundColor: "rgba(153, 102, 255, 0.6)",
-                                                        },
-                                                    ],
-                                                }}
-                                                options={{
-                                                    responsive: true,
-                                                    plugins: {
-                                                        legend: {
-                                                            position: "top",
-                                                        },
-                                                        title: {
-                                                            display: true,
-                                                            text: "Productos Favoritos de los Clientes",
-                                                        },
-                                                    },
-                                                }}
-                                            />
-                                            
-                                            <Spacer y={2} />
-                                            
-                                            <Pie
-                                                data={{
-                                                    labels: ["Frecuencia de Compra", "Valor Promedio del Pedido"],
-                                                    datasets: [
-                                                        {
-                                                            label: "Estadísticas de Clientes",
-                                                            data: [
-                                                                Object.keys(customerStats.purchaseFrequency).length,
-                                                                customerStats.averageOrderValue,
-                                                            ],
-                                                            backgroundColor: [
-                                                                "rgba(255, 99, 132, 0.6)",
-                                                                "rgba(54, 162, 235, 0.6)",
-                                                            ],
-                                                        },
-                                                    ],
-                                                }}
-                                                options={{
-                                                    responsive: true,
-                                                    plugins: {
-                                                        legend: {
-                                                            position: "top",
-                                                        },
-                                                        title: {
-                                                            display: true,
-                                                            text: "Frecuencia de Compra vs Valor Promedio",
-                                                        },
-                                                    },
-                                                }}
-                                            />
-                                            
-                                            <Spacer y={2} />
-                                            
-                                            <Table
-                                                aria-label="Tabla de Estadísticas de Clientes"
-                                                css={{
-                                                    height: "auto",
-                                                    minWidth: "100%",
-                                                }}
-                                            >
-                                                <TableHeader>
-                                                    <TableColumn>ID de Cliente</TableColumn>
-                                                    <TableColumn>Frecuencia de Compra</TableColumn>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {Object.entries(customerStats.purchaseFrequency).map(
-                                                        ([userId, frequency]) => (
-                                                            <TableRow key={userId}>
-                                                                <TableCell>{userId}</TableCell>
-                                                                <TableCell>{frequency}</TableCell>
-                                                            </TableRow>
-                                                        )
-                                                    )}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </Tab>
-                    </Tabs>
-                </CardBody>
-            </Card>
+  // Obtener informes iniciales
+  useEffect(() => {
+    fetchReports(filters);
+  }, [fetchReports, filters]);
+
+  // Manejar estados de carga y error
+  if (
+    loadingReports ||
+    loadingCustomersStatistics ||
+    loadingUsers ||
+    loadingBrands ||
+    loadingCategories ||
+    loadingSubcategories
+  ) {
+    return <p>Cargando...</p>;
+  }
+
+  if (errorReports) {
+    return <p>Error en reports: {errorReports}</p>;
+  }
+
+  if (errorCustomersStatistics) {
+    return <p>Error en estadísticas de clientes: {errorCustomersStatistics}</p>;
+  }
+
+  if (errorUsers) {
+    return <p>Error en usuarios: {errorUsers}</p>;
+  }
+
+  if (errorBrands) {
+    return <p>Error en marcas: {errorBrands}</p>;
+  }
+
+  if (errorCategories) {
+    return <p>Error en categorías: {errorCategories}</p>;
+  }
+
+  if (errorSubcategories) {
+    return <p>Error en subcategorías: {errorSubcategories}</p>;
+  }
+
+  // Mapear usuarios por ID para acceso rápido
+  const userMap = users.reduce((acc, user) => {
+    acc[user.id.toString()] = `${user.first_name} ${user.last_name}`;
+    return acc;
+  }, {});
+
+  const getUserNameById = (id) => userMap[id] || `Usuario ID ${id}`;
+
+  // Mapear marcas, categorías y subcategorías por ID
+  const brandMap = brands.reduce((acc, brand) => {
+    acc[brand.id.toString()] = brand.name;
+    return acc;
+  }, {});
+
+  const getBrandNameById = (id) => brandMap[id] || `Marca ID ${id}`;
+
+  const categoryMap = categories.reduce((acc, category) => {
+    acc[category.id.toString()] = category.name;
+    return acc;
+  }, {});
+
+  const getCategoryNameById = (id) => categoryMap[id] || `Categoría ID ${id}`;
+
+  const subcategoryMap = subcategories.reduce((acc, subcategory) => {
+    acc[subcategory.id.toString()] = subcategory.name;
+    return acc;
+  }, {});
+
+  const getSubcategoryNameById = (id) => subcategoryMap[id] || `Subcategoría ID ${id}`;
+
+  // Crear opciones para Autocomplete
+  const brandOptions = brands.map(brand => ({ label: brand.name, value: brand.id.toString() }));
+  const categoryOptions = categories.map(category => ({ label: category.name, value: category.id.toString() }));
+  const subcategoryOptions = subcategories.map(sub => ({ label: sub.name, value: sub.id.toString() }));
+  const customerOptions = users.map(user => ({ label: `${user.first_name} ${user.last_name}`, value: user.id.toString() }));
+
+  // Manejar cambios en los filtros
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value || '',
+    }));
+  };
+
+  // Manejar cambios de fecha desde DateRangePicker
+  const handleDateChange = (selectedDates) => {
+    if (selectedDates.start && selectedDates.end) {
+      const startDate = selectedDates.start.toString().split('T')[0];
+      const endDate = selectedDates.end.toString().split('T')[0];
+      setDateRange({
+        start: selectedDates.start,
+        end: selectedDates.end,
+      });
+      setFilters((prev) => ({
+        ...prev,
+        startDate,
+        endDate,
+      }));
+    } else {
+      // Si se borran las fechas
+      setDateRange({
+        start: null,
+        end: null,
+      });
+      setFilters((prev) => ({
+        ...prev,
+        startDate: '',
+        endDate: '',
+      }));
+    }
+  };
+
+  // Preparar datos para el gráfico de Top Productos
+  const topProductsData = reports.topProducts ? Object.entries(reports.topProducts) : [];
+  topProductsData.sort((a, b) => b[1] - a[1]); // Ordenar por ventas
+  const productNames = topProductsData.map(([productName]) => productName);
+  const productSales = topProductsData.map(([_, sales]) => sales);
+
+  const topProductsChartOptions = {
+    chart: {
+      type: 'bar',
+    },
+    title: {
+      text: 'Top Productos',
+    },
+    xaxis: {
+      categories: productNames,
+      labels: {
+        rotate: -45,
+      },
+    },
+    yaxis: {
+      title: {
+        text: 'Ventas',
+      },
+    },
+  };
+
+  // Preparar datos para el gráfico de Top Clientes
+  const topCustomersData = customersStatistics.topCustomers ? Object.entries(customersStatistics.topCustomers) : [];
+  topCustomersData.sort((a, b) => b[1] - a[1]); // Ordenar por total gastado
+  const customerNames = topCustomersData.map(([userId]) => getUserNameById(userId));
+  const customerSpent = topCustomersData.map(([_, totalSpent]) => totalSpent);
+
+  const topCustomersChartOptions = {
+    chart: {
+      type: 'bar',
+    },
+    title: {
+      text: 'Top Clientes',
+    },
+    xaxis: {
+      categories: customerNames,
+      labels: {
+        rotate: -45,
+      },
+    },
+    yaxis: {
+      title: {
+        text: 'Total Gastado',
+      },
+    },
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-[92vw]">
+      <p className="text-2xl font-bold mb-4">Estadísticas</p>
+
+      {/* Filtros */}
+      <div className="mb-6 p-4 border rounded">
+        <p className="text-xl font-semibold mb-4">Filtros</p>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          {/* Filtro de Marcas */}
+          <div>
+            <Autocomplete
+              isClearable
+              label="Marcas"
+              placeholder="Seleccione Marca"
+              onClear={() => handleFilterChange('brand', '')}
+              onSelectionChange={(selectedKey) => handleFilterChange('brand', selectedKey || '')}
+              selectedKey={filters.brand || null}
+              defaultItems={brandOptions}
+            >
+              {(item) => (
+                <AutocompleteItem key={item.value} value={item.value}>
+                  {item.label}
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+          </div>
+
+          {/* Filtro de Período */}
+          <div>
+            <Select
+              aria-label="Seleccione Período"
+              label="Período"
+              placeholder="Seleccione Período"
+              selectedKeys={filters.period ? new Set([filters.period]) : new Set()}
+              onSelectionChange={(selected) => {
+                const selectedValue = selected.size > 0 ? Array.from(selected)[0] : '';
+                handleFilterChange('period', selectedValue);
+              }}
+            >
+              <SelectItem key="daily" value="daily">Diario</SelectItem>
+              <SelectItem key="weekly" value="weekly">Semanal</SelectItem>
+              <SelectItem key="monthly" value="monthly">Mensual</SelectItem>
+              <SelectItem key="yearly" value="yearly">Anual</SelectItem>
+            </Select>
+          </div>
+
+          {/* Filtro de Categorías */}
+          <div>
+            <Autocomplete
+              isClearable
+              label="Categorías"
+              placeholder="Seleccione Categoría"
+              onClear={() => handleFilterChange('category', '')}
+              onSelectionChange={(selectedKey) => handleFilterChange('category', selectedKey || '')}
+              selectedKey={filters.category || null}
+              defaultItems={categoryOptions}
+            >
+              {(item) => (
+                <AutocompleteItem key={item.value} value={item.value}>
+                  {item.label}
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+          </div>
+
+          {/* Filtro de Subcategorías */}
+          <div>
+            <Autocomplete
+              isClearable
+              label="Subcategorías"
+              placeholder="Seleccione Subcategoría"
+              onClear={() => handleFilterChange('subcategory', '')}
+              onSelectionChange={(selectedKey) => handleFilterChange('subcategory', selectedKey || '')}
+              selectedKey={filters.subcategory || null}
+              defaultItems={subcategoryOptions}
+            >
+              {(item) => (
+                <AutocompleteItem key={item.value} value={item.value}>
+                  {item.label}
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+          </div>
+
+          {/* Filtro de Fecha */}
+          <div>
+            <DateRangePicker
+              label="Rango de Fechas"
+              value={dateRange}
+              onChange={handleDateChange}
+            />
+          </div>
+
+          {/* Filtro de Cliente */}
+          <div>
+            <Autocomplete
+              isClearable
+              label="Cliente"
+              placeholder="Seleccione Cliente"
+              onClear={() => handleFilterChange('customerId', '')}
+              onSelectionChange={(selectedKey) => handleFilterChange('customerId', selectedKey || '')}
+              selectedKey={filters.customerId || null}
+              defaultItems={customerOptions}
+            >
+              {(item) => (
+                <AutocompleteItem key={item.value} value={item.value}>
+                  {item.label}
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+          </div>
+
         </div>
-    );
+      </div>
+
+      {/* Sección de Reports */}
+      <div className="mb-6">
+        <p><strong>Valor Promedio de Pedido:</strong> ${reports.averageOrderValue}</p>
+        <p><strong>Total de Ventas:</strong> ${reports.totalSales}</p>
+        <p><strong>Total de Pedidos:</strong> {reports.totalOrders} ventas</p>
+
+        {/* Gráfico de Top Productos */}
+        <div className="mt-4">
+          <p className="text-lg font-bold">Top Productos:</p>
+          {productNames.length > 0 ? (
+            <Chart
+              options={topProductsChartOptions}
+              series={[{ data: productSales }]}
+              type="bar"
+              height={350}
+            />
+          ) : (
+            <p>No hay datos disponibles para los Top Productos.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Sección de Estadísticas de Clientes */}
+      <div className="mt-6">
+        {/* Gráfico de Top Clientes */}
+        <div className="mt-6">
+          <p className="text-lg font-bold">Top Clientes:</p>
+          {customerNames.length > 0 ? (
+            <Chart
+              options={topCustomersChartOptions}
+              series={[{ data: customerSpent }]}
+              type="bar"
+              height={350}
+            />
+          ) : (
+            <p>No hay datos disponibles para los Top Clientes.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

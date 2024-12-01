@@ -15,6 +15,7 @@ import { Link } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { IconReportMoney } from "@tabler/icons-react";
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,7 +33,8 @@ export default function DashboardLayout({ children }) {
     // { label: "Estadísticas", path: "/dashboard/statitics", icon: <IconChartBar /> },
     { label: "Productos", path: "/dashboard/products", icon: <IconPackage /> },
     { label: "Usuarios", path: "/dashboard/users", icon: <IconUsersGroup /> },
-    { label: "Ventas", path: "/dashboard/sales", icon: <IconChartBar /> },
+    { label: "Ventas", path: "/dashboard/sales", icon: <IconReportMoney /> },
+    { label: "Estadísticas", path: "/dashboard/stats", icon: <IconChartBar /> },
     {
       label: "Cerrar sesión",
       icon: <IconArrowLeft />,
