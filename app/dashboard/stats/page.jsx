@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useReports from "@/app/hooks/useReports";
 import useCustomersStatistics from "@/app/hooks/useCustomersStatistics";
 import useUsers from "@/app/hooks/useUsers";
@@ -14,16 +14,18 @@ import {
   SelectItem,
   Autocomplete,
   AutocompleteItem,
-  DateRangePicker
+  DateRangePicker,
 } from "@nextui-org/react";
 import { parseDate } from "@internationalized/date";
+import { IconDownload } from "@tabler/icons-react";
 import dynamic from 'next/dynamic';
+
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 export default function StatsPage() {
   const searchParams = useSearchParams();
+  const printRef = useRef();
 
-  // Inicializar filtros con nombres de clave consistentes
   const initialFilters = {
     period: searchParams.get('period') || '',
     brand: searchParams.get('brand') || '',
@@ -34,7 +36,6 @@ export default function StatsPage() {
     customerId: searchParams.get('customerId') || '',
   };
 
-  // Inicializar dateRange con objetos DateValue o null
   const [dateRange, setDateRange] = useState({
     start: initialFilters.startDate ? parseDate(initialFilters.startDate) : null,
     end: initialFilters.endDate ? parseDate(initialFilters.endDate) : null,
@@ -49,12 +50,10 @@ export default function StatsPage() {
   const { categories, loading: loadingCategories, error: errorCategories } = useCategories();
   const { subcategories, loading: loadingSubcategories, error: errorSubcategories } = useSubcategories();
 
-  // Obtener informes iniciales
   useEffect(() => {
     fetchReports(filters);
   }, [fetchReports, filters]);
 
-  // Manejar estados de carga y error
   if (
     loadingReports ||
     loadingCustomersStatistics ||
@@ -90,7 +89,6 @@ export default function StatsPage() {
     return <p>Error en subcategorías: {errorSubcategories}</p>;
   }
 
-  // Mapear usuarios por ID para acceso rápido
   const userMap = users.reduce((acc, user) => {
     acc[user.id.toString()] = `${user.first_name} ${user.last_name}`;
     return acc;
@@ -98,35 +96,11 @@ export default function StatsPage() {
 
   const getUserNameById = (id) => userMap[id] || `Usuario ID ${id}`;
 
-  // Mapear marcas, categorías y subcategorías por ID
-  const brandMap = brands.reduce((acc, brand) => {
-    acc[brand.id.toString()] = brand.name;
-    return acc;
-  }, {});
-
-  const getBrandNameById = (id) => brandMap[id] || `Marca ID ${id}`;
-
-  const categoryMap = categories.reduce((acc, category) => {
-    acc[category.id.toString()] = category.name;
-    return acc;
-  }, {});
-
-  const getCategoryNameById = (id) => categoryMap[id] || `Categoría ID ${id}`;
-
-  const subcategoryMap = subcategories.reduce((acc, subcategory) => {
-    acc[subcategory.id.toString()] = subcategory.name;
-    return acc;
-  }, {});
-
-  const getSubcategoryNameById = (id) => subcategoryMap[id] || `Subcategoría ID ${id}`;
-
-  // Crear opciones para Autocomplete
   const brandOptions = brands.map(brand => ({ label: brand.name, value: brand.id.toString() }));
   const categoryOptions = categories.map(category => ({ label: category.name, value: category.id.toString() }));
   const subcategoryOptions = subcategories.map(sub => ({ label: sub.name, value: sub.id.toString() }));
   const customerOptions = users.map(user => ({ label: `${user.first_name} ${user.last_name}`, value: user.id.toString() }));
 
-  // Manejar cambios en los filtros
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({
       ...prev,
@@ -134,7 +108,6 @@ export default function StatsPage() {
     }));
   };
 
-  // Manejar cambios de fecha desde DateRangePicker
   const handleDateChange = (selectedDates) => {
     if (selectedDates.start && selectedDates.end) {
       const startDate = selectedDates.start.toString().split('T')[0];
@@ -149,7 +122,6 @@ export default function StatsPage() {
         endDate,
       }));
     } else {
-      // Si se borran las fechas
       setDateRange({
         start: null,
         end: null,
@@ -162,9 +134,8 @@ export default function StatsPage() {
     }
   };
 
-  // Preparar datos para el gráfico de Top Productos
   const topProductsData = reports.topProducts ? Object.entries(reports.topProducts) : [];
-  topProductsData.sort((a, b) => b[1] - a[1]); // Ordenar por ventas
+  topProductsData.sort((a, b) => b[1] - a[1])
   const productNames = topProductsData.map(([productName]) => productName);
   const productSales = topProductsData.map(([_, sales]) => sales);
 
@@ -188,9 +159,8 @@ export default function StatsPage() {
     },
   };
 
-  // Preparar datos para el gráfico de Top Clientes
   const topCustomersData = customersStatistics.topCustomers ? Object.entries(customersStatistics.topCustomers) : [];
-  topCustomersData.sort((a, b) => b[1] - a[1]); // Ordenar por total gastado
+  topCustomersData.sort((a, b) => b[1] - a[1])
   const customerNames = topCustomersData.map(([userId]) => getUserNameById(userId));
   const customerSpent = topCustomersData.map(([_, totalSpent]) => totalSpent);
 
@@ -214,13 +184,68 @@ export default function StatsPage() {
     },
   };
 
+  const exportPDF = async () => {
+    const input = printRef.current;
+    if (!input) {
+      console.error("No se encontró el contenido para exportar.");
+      return;
+    }
+
+    try {
+      const html2pdf = (await import("html2pdf.js")).default;
+
+      const opt = {
+        margin: 0.5,
+        filename: "estadisticas.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      }
+  
+      html2pdf().set(opt).from(input).save();
+    } catch (error) {
+      console.error("Error al exportar PDF:", error);
+    }
+  }
+
   return (
-    <div className="container mx-auto px-4 py-6 max-w-[92vw]">
-      <p className="text-2xl font-bold mb-4">Estadísticas</p>
+    <div ref={printRef} className="container mx-auto px-4 py-6 max-w-[92vw]">
+      <div className="flex flex-wrap justify-between mb-4">
+        <p className="text-2xl font-bold">Estadísticas</p>
+        <Button
+          color="primary"
+          onClick={exportPDF}
+        >
+          <IconDownload className="h-5" />
+          Exportar
+        </Button>
+      </div>
 
       {/* Filtros */}
       <div className="mb-6 p-4 border rounded">
-        <p className="text-xl font-semibold mb-4">Filtros</p>
+        <div className="flex flex-wrap justify-between mb-4">
+          <p className="text-xl font-semibold">Filtros</p>
+          <Button
+            color="warning"
+            onClick={() => {
+              setFilters({
+                period: '',
+                brand: '',
+                category: '',
+                subcategory: '',
+                startDate: '',
+                endDate: '',
+                customerId: '',
+              });
+              setDateRange({
+                start: null,
+                end: null,
+              });
+            }}
+          >
+            Limpiar filtros
+          </Button>
+        </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 
           {/* Filtro de Marcas */}
@@ -240,25 +265,6 @@ export default function StatsPage() {
                 </AutocompleteItem>
               )}
             </Autocomplete>
-          </div>
-
-          {/* Filtro de Período */}
-          <div>
-            <Select
-              aria-label="Seleccione Período"
-              label="Período"
-              placeholder="Seleccione Período"
-              selectedKeys={filters.period ? new Set([filters.period]) : new Set()}
-              onSelectionChange={(selected) => {
-                const selectedValue = selected.size > 0 ? Array.from(selected)[0] : '';
-                handleFilterChange('period', selectedValue);
-              }}
-            >
-              <SelectItem key="daily" value="daily">Diario</SelectItem>
-              <SelectItem key="weekly" value="weekly">Semanal</SelectItem>
-              <SelectItem key="monthly" value="monthly">Mensual</SelectItem>
-              <SelectItem key="yearly" value="yearly">Anual</SelectItem>
-            </Select>
           </div>
 
           {/* Filtro de Categorías */}
@@ -297,6 +303,25 @@ export default function StatsPage() {
                 </AutocompleteItem>
               )}
             </Autocomplete>
+          </div>
+
+          {/* Filtro de Período */}
+          <div>
+            <Select
+              aria-label="Seleccione Período"
+              label="Período"
+              placeholder="Seleccione Período"
+              selectedKeys={filters.period ? new Set([filters.period]) : new Set()}
+              onSelectionChange={(selected) => {
+                const selectedValue = selected.size > 0 ? Array.from(selected)[0] : '';
+                handleFilterChange('period', selectedValue);
+              }}
+            >
+              <SelectItem key="daily" value="daily">Diario</SelectItem>
+              <SelectItem key="weekly" value="weekly">Semanal</SelectItem>
+              <SelectItem key="monthly" value="monthly">Mensual</SelectItem>
+              <SelectItem key="yearly" value="yearly">Anual</SelectItem>
+            </Select>
           </div>
 
           {/* Filtro de Fecha */}
