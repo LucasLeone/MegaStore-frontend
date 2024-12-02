@@ -120,6 +120,7 @@ export default function StatsPage() {
         ...prev,
         startDate,
         endDate,
+        period: '',
       }));
     } else {
       setDateRange({
@@ -315,6 +316,10 @@ export default function StatsPage() {
               onSelectionChange={(selected) => {
                 const selectedValue = selected.size > 0 ? Array.from(selected)[0] : '';
                 handleFilterChange('period', selectedValue);
+                setDateRange({
+                  start: null,
+                  end: null,
+                });
               }}
             >
               <SelectItem key="daily" value="daily">Diario</SelectItem>
@@ -330,6 +335,7 @@ export default function StatsPage() {
               label="Rango de Fechas"
               value={dateRange}
               onChange={handleDateChange}
+              isDisabled={filters.period !== ''}
             />
           </div>
 
