@@ -262,6 +262,10 @@ export default function CheckoutPage() {
                         onChange={handlePaymentChange}
                         required
                         placeholder="1234 5678 9012 3456"
+                        minLength={16}
+                        maxLength={16}
+                        isInvalid={paymentInfo.cardNumber.length !== 16}
+                        errorMessage="El número de tarjeta debe tener 16 dígitos."
                       />
                       <Input
                         label="Nombre en la Tarjeta"
@@ -270,6 +274,10 @@ export default function CheckoutPage() {
                         onChange={handlePaymentChange}
                         required
                         placeholder="Juan Pérez"
+                        minLength={3}
+                        maxLength={50}
+                        isInvalid={paymentInfo.cardName.length < 3}
+                        errorMessage="Ingresa un nombre válido."
                       />
                       <Input
                         label="Fecha de Expiración"
@@ -278,6 +286,10 @@ export default function CheckoutPage() {
                         onChange={handlePaymentChange}
                         placeholder="MM/AA"
                         required
+                        minLength={5}
+                        maxLength={5}
+                        isInvalid={paymentInfo.expiryDate.length !== 5 || !/^\d{2}\/\d{2}$/.test(paymentInfo.expiryDate)}
+                        errorMessage="Ingresa una fecha válida."
                       />
                       <Input
                         label="CVV"
@@ -287,6 +299,10 @@ export default function CheckoutPage() {
                         required
                         placeholder="123"
                         type="password"
+                        minLength={3}
+                        maxLength={4}
+                        isInvalid={paymentInfo.cvv.length < 3}
+                        errorMessage="Ingresa un CVV válido."
                       />
                       <div className="mt-4 flex justify-end">
                         <Button
