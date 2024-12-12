@@ -78,6 +78,7 @@ export default function ProfilePage() {
   const [floor, setFloor] = useState("");
   const [apartment, setApartment] = useState("");
   const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
 
@@ -105,6 +106,7 @@ export default function ProfilePage() {
         setFloor(response.data.address.floor || "");
         setApartment(response.data.address.apartment || "");
         setCity(response.data.address.city);
+        setState(response.data.address.state);
         setPostalCode(response.data.address.postal_code);
         setCountry(response.data.address.country);
         setIsLoadingUser(false);
@@ -176,6 +178,7 @@ export default function ProfilePage() {
         floor: floor || null,
         apartment: apartment || null,
         city,
+        state,
         postal_code: postalCode,
         country,
       },
@@ -352,13 +355,23 @@ export default function ProfilePage() {
                       />
                     </div>
                   </div>
-                  <div className="flex flex-col">
-                    <label className="font-medium">Ciudad</label>
-                    <Input
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Ciudad"
-                    />
+                  <div className="flex space-x-4">
+                    <div className="flex flex-col w-1/2">
+                      <label className="font-medium">Ciudad</label>
+                      <Input
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Ciudad"
+                      />
+                    </div>
+                    <div className="flex flex-col w-1/2">
+                      <label className="font-medium">Provincia</label>
+                      <Input
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                        placeholder="Provincia"
+                      />
+                    </div>
                   </div>
                   <div className="flex space-x-4">
                     <div className="flex flex-col w-1/2">

@@ -132,8 +132,8 @@ export default function SalesPage() {
         const disabledKeys = [];
         if (sale.status !== "IN_PROCESS") disabledKeys.push("mark-sent");
         if (sale.status !== "SENT") disabledKeys.push("mark-completed");
+        if (sale.status === "COMPLETED") disabledKeys.push("mark-canceled");
         if (sale.status === "CANCELED") disabledKeys.push("mark-canceled");
-        // "mark-canceled" siempre está habilitado, por lo que no lo añadimos a disabledKeys
 
         return {
           id: sale.id,
@@ -280,7 +280,15 @@ export default function SalesPage() {
                 {selectedSale ? (
                   <div className="space-y-4">
                     <div>
-                      <strong>Fecha:</strong> {new Date(selectedSale.saleDate).toLocaleDateString()}
+                      <strong>Fecha: </strong>
+                      {new Date(selectedSale.saleDate).toLocaleString("es-AR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })}
                     </div>
                     <div>
                       <strong>Usuario:</strong> {`${selectedSale.user.first_name} ${selectedSale.user.last_name}`}
@@ -299,6 +307,12 @@ export default function SalesPage() {
                     </div>
                     <div>
                       <strong>Método de Pago:</strong> {selectedSale.paymentMethod}
+                    </div>
+                    <div>
+                      <strong>Método de Envio:</strong> {selectedSale.shippingMethod}
+                    </div>
+                    <div>
+                      <strong>Costo del Envio:</strong> ${selectedSale.shippingCost.toLocaleString('es-AR')}
                     </div>
                     <div>
                       <strong>Total:</strong> ${selectedSale.totalAmount.toLocaleString('es-AR')}
